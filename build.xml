@@ -1,0 +1,124 @@
+<project name="VariantHunter" default="dist" basedir=".">
+	<description>
+		simple example build file
+	</description>
+	<!-- set global properties for this build -->
+
+	<property name="build" location="build"/>
+	<property name="dist"  location="dist"/>
+
+	<!--- here -->
+	<property name="build" value="build"/>
+	<property name="classes" value="${build}/classes"/>
+	<property name="jar" value="jar"/>
+	<property name="dist" value="dist"/>
+	<property name="ant_tmp" value=".ant_tmp"/>
+	<property name="main-class" value="org.iontorrent.sam2fs.main.SamToFlowSpace"/>
+	<property name="lib" value="lib"/>
+	<property name="lisp.dir" location="public/ion-torrent/lisp"/>
+	<property name="c.dir" location="public/ion-torrent/c"/>
+	<property name="java.dir" location="public/ion-torrent/java"/>
+	<property name="sam-version" value="1.57"/>
+	<property name="picard-version" value="1.57"/>
+
+	<path id="sam-jdk.path">
+		<pathelement location="${lib}/sam-${sam-version}.jar"/>
+	</path>
+
+	<path id="picard-jdk.path">
+		<pathelement location="${lib}/picard-${picard-version}.jar"/>
+	</path>
+
+	<target name="buildinfo">
+		<tstamp>
+			<format property="builtat" pattern="MM/dd/yyyy hh:mm aa" timezone="America/New_York"/>
+		</tstamp>
+		<exec command="bash" outputproperty="svnversion">
+			<arg value="-c"/>
+			<arg value="git log 2>/dev/null | grep -m 1 commit | awk '{print $2}'" />
+		</exec>
+		<exec executable="whoami" outputproperty="whoami"/>
+		<exec executable="uname" outputproperty="buildsystem"><arg value="-a"/></exec>
+		<property name="buildtime" value="${builtat}"/>
+		<property name="git-build" value="${svnversion}"/>
+		<property name="builder" value="${whoami}"/>
+		<property name="version" value="${version}"/>
+		<property name="system" value="${buildsystem}"/>
+	</target>
+
+	<target name="init" depends="buildinfo">
+		<!-- Create the time stamp -->
+		<tstamp/>
+		<!-- Create the build directory structure used by compile -->
+		<mkdir dir="${build}"/>
+		<path id="classpath">
+			<fileset dir="${lib}">
+				<include name="**/*.jar"/>
+			</fileset>
+		</path>
+	</target>
+
+	<target name="compile" depends="init"
+		description="compile the source " >
+
+		<!-- Create the build directory -->
+		<mkdir dir="${build}"/>
+
+		<!-- Run build script for lisp/c components -->
+		<exec executable="${lisp.dir}/build.sh">
+			<!-- <arg value="foo.m4"/> -->
+		</exec>
+		<exec executable="${c.dir}/build.sh">
+			<!-- <arg value="foo.m4"/> -->
+		</exec>
+		<move todir="${build}">
+			<fileset dir="${lisp.dir}" includes="ion-variant-hunter-core"/>
+		</move>
+		<move todir="${build}">
+			<fileset dir="${c.dir}" includes="bayesian-vh-rescorer"/>
+		</move>
+
+		<!-- Compile the java code from ${java.dir} into ${classes} -->
+		<mkdir dir="${classes}"/>
+		<javac srcdir="${java.dir}" destdir="${classes}" debug="on" debuglevel="lines,vars,source" includeantruntime="false">
+			<classpath refid="sam-jdk.path"/>
+			<classpath refid="picard-jdk.path"/>
+			<classpath refid="classpath"/>
+			<compilerarg value="-Xlint"/>
+		</javac>
+		<!-- Create JAR files from the java compile -->
+		<mkdir dir="${jar}"/>
+		<jar destfile="${jar}/SamToFlowSpace.jar" basedir="${classes}" duplicate="fail" index="true">
+			<zipfileset src="${lib}/sam-${sam-version}.jar" includes="**/*.class"/>
+			<zipfileset src="${lib}/picard-${picard-version}.jar" includes="**/*.class"/>
+			<manifest>
+				<attribute name="Implementation-Version" value="version-${version}-build-${git-build}-${buildtime}-${system}"/>
+				<attribute name="Main-Class" value="${main-class}"/>
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="dist" depends="compile"
+		description="generate the distribution" >
+		<!-- Places library jar files there -->
+		<copy todir="${dist}">
+			<fileset dir="${jar}" includes="*.jar"/>
+		</copy>
+
+		<exec executable="cp">
+			<arg value="-p" />
+			<arg value="${build}/ion-variant-hunter-core" />
+			<arg value="${build}/bayesian-vh-rescorer" />
+			<arg value="${dist}/" />
+		</exec>
+	</target>
+
+	<target name="clean"
+		description="clean up" >
+		<!-- Delete the ${build} and ${dist} directory trees -->
+		<delete dir="${build}"/>
+		<delete dir="${dist}"/>
+		<delete dir="${jar}"/>
+		<delete dir="${ant_tmp}"/>
+	</target>
+</project>

@@ -1,0 +1,76 @@
+
+
+Contained here are files where minor modifications were made to the core
+sbcl 1.0.51 source distribution.  The source and other relevant information
+for sbcl can be found at http://www.sbcl.org/ and specific files can be 
+found at http://sourceforge.net/projects/sbcl/files/sbcl/.
+
+The diff between the original (sbcl-1.0.51) and the modifications
+(sbcl-1.0.51.2x-backend-parms.centos) are as follows.
+
+*** sbcl-1.0.51/src/compiler/x86-64/backend-parms.lisp  2011-08-20 19:15:12.000000000 -0400
+--- sbcl-1.0.51.2x-backend-parms.centos/src/compiler/x86-64/backend-parms.lisp  2011-08-29 16:44:24.000000000 -0400
+***************
+*** 33,39 ****
+  ;;; compatible systems to return different values for getpagesize().
+  ;;; -- JES, 2007-01-06
+  (eval-when (:compile-toplevel :load-toplevel :execute)
+!   (setf *backend-page-bytes* 32768))
+  
+  ;;; The size in bytes of GENCGC cards, i.e. the granularity at which
+  ;;; writes to old generations are logged.  With mprotect-based write
+--- 33,39 ----
+  ;;; compatible systems to return different values for getpagesize().
+  ;;; -- JES, 2007-01-06
+  (eval-when (:compile-toplevel :load-toplevel :execute)
+!   (setf *backend-page-bytes* 65536))
+  
+  ;;; The size in bytes of GENCGC cards, i.e. the granularity at which
+  ;;; writes to old generations are logged.  With mprotect-based write
+
+*** sbcl-1.0.51/src/runtime/runtime.c   2011-08-20 19:15:12.000000000 -0400
+--- sbcl-1.0.51.2x-backend-parms.centos/src/runtime/runtime.c   2011-09-14 16:31:47.000000000 -0400
+***************
+*** 163,170 ****
+  /* miscellaneous chattiness */
+  
+  void
+! print_help()
+  {
+      puts(
+  "Usage: sbcl [runtime-options] [toplevel-options] [user-options]\n\
+  Common runtime options:\n\
+--- 163,178 ----
+  /* miscellaneous chattiness */
+  
+  void
+! print_help(char *exec)
+  {
++     fputs (
++ "Variant caller customized for the Ion Torrent platform.\n\
++ For variant caller options:\n  ", stdout);
++     fputs (exec,stdout);
++     puts (
++ " -h\n\n\
++ Sbcl options are printed below.\n");
++ 
+      puts(
+  "Usage: sbcl [runtime-options] [toplevel-options] [user-options]\n\
+  Common runtime options:\n\
+***************
+*** 392,398 ****
+                  /* I think this is the (or a) usual convention: upon
+                   * seeing "--help" we immediately print our help
+                   * string and exit, ignoring everything else. */
+!                 print_help();
+                  exit(0);
+              } else if (0 == strcmp(arg, "--version")) {
+                  /* As in "--help" case, I think this is expected. */
+--- 400,406 ----
+                  /* I think this is the (or a) usual convention: upon
+                   * seeing "--help" we immediately print our help
+                   * string and exit, ignoring everything else. */
+!                 print_help(argv[0]);
+                  exit(0);
+              } else if (0 == strcmp(arg, "--version")) {
+                  /* As in "--help" case, I think this is expected. */

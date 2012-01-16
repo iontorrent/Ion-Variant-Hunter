@@ -1,0 +1,16 @@
+
+Jan. 2012
+
+Requires sbcl to be installed.  Modifications and version of sbcl used for 2.0 can be found in this package at
+public/ion-torrent/lisp/sbcl-mod
+
+Download sam-1.57.jar and picard-1.57.jar and place them in a folder
+called lib (http://sourceforge.net/projects/picard/files/picard-tools/1.57/picard-tools-1.57.zip/download).
+
+To build:
+ant
+
+To clean:
+ant clean
+
+
