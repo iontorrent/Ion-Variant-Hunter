@@ -15,9 +15,9 @@
 	<property name="ant_tmp" value=".ant_tmp"/>
 	<property name="main-class" value="org.iontorrent.sam2fs.main.SamToFlowSpace"/>
 	<property name="lib" value="lib"/>
-	<property name="lisp.dir" location="public/ion-torrent/lisp"/>
-	<property name="c.dir" location="public/ion-torrent/c"/>
-	<property name="java.dir" location="public/ion-torrent/java"/>
+	<property name="lisp.dir" location="public/lisp"/>
+	<property name="c.dir" location="public/c"/>
+	<property name="java.dir" location="public/java"/>
 	<property name="sam-version" value="1.57"/>
 	<property name="picard-version" value="1.57"/>
 
@@ -72,7 +72,10 @@
 			<!-- <arg value="foo.m4"/> -->
 		</exec>
 		<move todir="${build}">
-			<fileset dir="${lisp.dir}" includes="ion-variant-hunter-core"/>
+			<filelist dir="${lisp.dir}">
+			  <file name="ion-variant-hunter-core"/>
+			  <file name="samRegionOverlap.py"/>
+			</filelist>
 		</move>
 		<move todir="${build}">
 			<fileset dir="${c.dir}" includes="bayesian-vh-rescorer"/>

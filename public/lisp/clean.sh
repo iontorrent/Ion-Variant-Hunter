@@ -3,7 +3,6 @@
 ## Find directory of build.sh
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-cd $DIR/bayesian-scorer
-make
+BIN=ion-variant-hunter-core
 
-mv bayesian-vh-rescorer ..
+rm $DIR/$BIN $DIR/samRegionOverlap.py

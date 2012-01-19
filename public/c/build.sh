@@ -3,6 +3,7 @@
 ## Find directory of build.sh
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-BIN=ion-variant-hunter-core
+cd $DIR/src/org/iontorrent/bayesian-scorer
+make
 
-rm $DIR/$BIN
+mv bayesian-vh-rescorer $DIR
