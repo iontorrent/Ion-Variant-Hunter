@@ -71,12 +71,8 @@
 		<exec executable="${c.dir}/build.sh">
 			<!-- <arg value="foo.m4"/> -->
 		</exec>
-		<move todir="${build}">
-			<filelist dir="${lisp.dir}">
-			  <file name="ion-variant-hunter-core"/>
-			  <file name="samRegionOverlap.py"/>
-			</filelist>
-		</move>
+		<move file="${lisp.dir}/ion-variant-hunter-core" todir="${build}" />
+		<move file="${lisp.dir}/samRegionOverlap.py" todir="${build}" />
 		<move todir="${build}">
 			<fileset dir="${c.dir}" includes="bayesian-vh-rescorer"/>
 		</move>
