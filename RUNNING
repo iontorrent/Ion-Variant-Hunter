@@ -1,0 +1,43 @@
+
+How to run Ion Variant Hunter
+
+Getting help:
+ion-variant-hunter-core --detailed-help
+ion-variant-hunter-core --default-value-help
+
+Runtime dependencies:
+python, 2.6 or later
+pysam, 0.5 or later (http://code.google.com/p/pysam/)
+
+Basic calling of ion-variant-hunter-core
+ion-variant-hunter-core --function write-alignment-n-deviation-lists-from-sam --bam-file $BAM  \
+                        --reference-file $REF --base-output-filename $OUT
+
+Common options:
+--dynamic-space-size 6144
+--java-bin-args _Xmx4G
+--min-variant-freq ,1/25
+--min-num-reads ,3
+--fs-align-range chr3:43543983-95343234
+
+Comma is needed in front of non-string values such as numbers, keywords, T, and NIL.
+For example,
+--aligner-method ,:auto
+--vh-num-threads ,1
+--print-flow-space-aligns? ,t
+--validate-alignments ,nil
+
+Internally, ion-variant-hunter-core uses SamToFlowSpace.jar to read the BAM files and produce
+flowgram alignments, and samRegionOverlap.py that determines coverage spanning an indel event.
+
+To annotate Variant Hunter's VCF file with a Bayesian score, there is another program
+bayesian-vh-rescorer
+
+To run this,
+bayesian-vh-rescorer $REF $OUT.merged.dev TACGTACGTCTGAGCATCGATCGATGTACAGC \
+                     $OUT.bayesian.vcf $OUT.vcf
+where
+$REF is the reference
+$OUT.merged.dev/ $OUT.vcf are the outputs from ion-variant-hunter-core
+$OUT.bayesian.vcf is the new VCF file annotated with the Bayesian score.
+

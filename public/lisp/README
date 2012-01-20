@@ -1,0 +1,11 @@
+
+To build:
+./build.sh
+
+sbcl-mod - modifications to the stock sbcl source code
+scripts - helper python script required at runtime
+src – variant hunter source code
+
+Assumes that sbcl is installed with appropriate modifications located in sbcl-mod.
+One could modify build.sh to include building sbcl every time, but this would substantially
+increase the build time. This may be acceptable in automated build situations.
