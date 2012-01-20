@@ -111,6 +111,7 @@
 		<exec executable="cp">
 			<arg value="-p" />
 			<arg value="${build}/ion-variant-hunter-core" />
+			<arg value="${build}/samRegionOverlap.py" />
 			<arg value="${build}/bayesian-vh-rescorer" />
 			<arg value="${dist}/" />
 		</exec>
