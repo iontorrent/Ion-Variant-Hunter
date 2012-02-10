@@ -841,7 +841,7 @@
 	   ))
     (setq std-error-lines (reverse std-error-lines))
     (when std-error-lines
-      (format *error-output* "WARNING, there was stderr output from external process with PID of ~a:~%" (process-pid process))
+      (format *error-output* "Note, there was stderr output from external process with PID of ~a:~%" (process-pid process))
       (format *error-output* "~{~a~^~%~}~%" std-error-lines)
       (format *error-output* "End of external process error output.~%"))
     (close process-stderr)

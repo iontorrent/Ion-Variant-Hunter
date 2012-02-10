@@ -150,7 +150,7 @@
 
 (defun write-alignment-n-deviation-lists-from-sam-usage (&optional (stream t) more-info?)
   (format stream "Usage:
-./ion-variant-hunter-core  --function write-alignment-n-deviation-lists-from-sam --bam-file {bam-file} --reference-file {ref-file}~%")
+./ion-variant-hunter-core  --function write-alignment-n-deviation-lists-from-sam --bam-file {bam-file} --reference-file {ref-file} --base-output-filename {output}~%")
   (when more-info?
     (format stream "For more info, use --detailed-help or --default-value-help~%~%")))
 
