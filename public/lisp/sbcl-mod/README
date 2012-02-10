@@ -1,0 +1,8 @@
+
+Modification made here are not necessarily required, but makes the binary more stable with
+the typical system setting for
+
+/proc/sys/vm/max_map_count
+
+Also, contains some non-essential changes for the --help command line option.
+
