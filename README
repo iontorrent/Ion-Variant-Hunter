@@ -1,10 +1,20 @@
-Ion Variant Hunter README
-Jan. 2012
 
-For the lisp component (ion-variant-hunter-core):
-Requires sbcl to be installed.  Specific sbcl version used for TS 2.0.0 was sbcl-1.0.51.
-Modifications to sbcl used for TS 2.0.0 can be found in this package at
+Ion Variant Hunter README
+Feb. 2012
+v. 0.1.2
+
+Ion Variant Hunter is a unified variant caller, that uses flow intensities and alignments based
+on bases and base counts (aka flowgram).
+
+Variant Hunter produces both SNPs and InDels, but note that the Torrent Server variant
+caller plugin only uses the InDel calls from this software.
+
+For building the lisp component (ion-variant-hunter-core):
+Requires sbcl to be installed.  Specific sbcl version used for TS 2.0.x was sbcl-1.0.51.
+
+Modifications to sbcl used while building can be found in this package at
 public/lisp/sbcl-mod/
+
 For development, one can use slime with emacs. Both are available packages in Ubuntu 10.04.
 
 For the java component (SamToFlowSpace.jar):
