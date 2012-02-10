@@ -844,6 +844,7 @@
       (format *error-output* "WARNING, there was stderr output from external process with PID of ~a:~%" (process-pid process))
       (format *error-output* "~{~a~^~%~}~%" std-error-lines)
       (format *error-output* "End of external process error output.~%"))
+    (close process-stderr)
     (unless (eql 0 process-exit)
       (error "ERROR, external process with pid ~a exited abnormally with an exit code of ~a.~%"
 	     (process-pid process)
@@ -1009,7 +1010,8 @@
        ;;(setq process (run-python-program nil))
 	 ) ;; end of reading python
     ;; check status
-	
+
+	(close python-stdout)
 	;; Check to see if process was terminated early
 	(sleep 1)
 	(abort-message streamer cur-line t)
