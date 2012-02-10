@@ -43,7 +43,7 @@ long long filesize(const char *f);
 int skip2end(FILE *fp, char *s, int ll, FILE *fp1);
 void mini_cut_cal(int &mc, int a, int b);
 void output_progress(char *f, double a);
-void output_progress(char *f, double a, char *n);
+void output_progress(char *f, double a, const char *n);
 int count_symbol(char *, char);
 int lenofread(char *);
 int lenofread(char *, int);

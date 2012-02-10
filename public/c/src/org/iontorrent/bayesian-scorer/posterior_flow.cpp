@@ -10,6 +10,7 @@
 
 #include "posterior_flow.h"
 #define EC_CEILING 500.0
+#define sizeofline 10000000
 static FILE *outp = stdout;
 static FILE *logfile = stderr;
 static int num_error = 0;
@@ -350,6 +351,7 @@ static int set_hyp(char *line, flow_list *hy, const char *s)  // 2 hypothesis fi
 	hy->add_list(f, fs, i, 0.005);
     } else {
 	hy->add_list(f, fs, i, 0.001);
+	/*
 	if (strlen(ref) == 2 && strlen(targ) ==1) {  // for deletion, try alternative SNP cases.
 	    int y = strlen(ref)-strlen(targ);
 	    fs[CONTEXT-1]+=y;
@@ -358,6 +360,7 @@ static int set_hyp(char *line, flow_list *hy, const char *s)  // 2 hypothesis fi
 	    fs[i-CONTEXT] += y;
 	    hy->add_list(f, fs, i, 0.005);
 	}  
+	*/
     }
     int b= count_of_flow(targ);
     rv = b-1;
@@ -401,7 +404,6 @@ static int add_read(FILE *fp, char *line, flow_list *rs, int adj)
 	}
 	sscanf(ss, "%c:%d:%*c:%*d:%d", &dd, &x, &fi);
     }
-
     unsigned char d1 = code(dd);
     if (debug) printf("%c  %d %d %d %d %d\t", d, x, total_flow_order[x], fs[x], d1, fi);
     int lr = pos-cur_pos;
@@ -621,7 +623,7 @@ main(int argc, char *argv[])
     }
     const char *s = faseq.Sequence();
     FILE *fp = ckopen(argv[2], "r");
-    char line[100000], last_line[100000];
+    char *line = new char[sizeofline], *last_line = new char[sizeofline];
     last_line[0] = 0;
     expand_flow(total_flow_order, 5000, argv[3]);
     outp = ckopen(argv[4], "w");
@@ -643,13 +645,13 @@ main(int argc, char *argv[])
 	    } else {
         	FILE *input_dev = ckopen(argv[i], "r");
 		print_header = 0;
-		while (fgets(line, sizeof line, input_dev)) {
+		while (fgets(line, sizeofline, input_dev)) {
 	    	    if (line[0] == '#') {
 			if (out_header && line[1] != '#') {
 		   	    fprintf(outp, "##FILTER=<ID=Bayesian_Score,Description=\"Using Bayesian model to re-evaluate the quality of the variant prediction.\">\n");
 		    	    out_header = 0;
 		    	}  
-                    	fprintf(outp, line);
+                    	fprintf(outp, "%s", line);
 	    	    } else break;
 		}
 	    }
@@ -658,9 +660,9 @@ main(int argc, char *argv[])
     int diff, coverage;
     int need_check = 0;
     float vh;
-    while (fgets(line, sizeof line, fp)) {
+    while (fgets(line, sizeofline, fp)) {
 	if (line[0] == '#') { 
-	    if (print_header) fprintf(outp, line); 
+	    if (print_header) fprintf(outp, "%s", line); 
 	    continue;
 	}
 	if (line[0] == '\n') break;
@@ -689,7 +691,7 @@ main(int argc, char *argv[])
 	    need_check = 0;
 	} else {
 	    if (last_line[0] != 0) {
-		fprintf(outp, last_line);
+		fprintf(outp, "%s", last_line);
 		vh = vhscore(last_line);
 		aa.best_hyp(hy, rs, coverage, vh);
 	    }
@@ -703,15 +705,15 @@ main(int argc, char *argv[])
 	}
 
   	//printf("coverage=%d\n", coverage);
-	fgets(line, sizeof line, fp); // definition line skip
-	while (fgets(line, sizeof line, fp)) {
+	fgets(line, sizeofline, fp); // definition line skip
+	while (fgets(line, sizeofline, fp)) {
 	    if (line[0] == '\n') break;
 	    if (line[0] == 'I') continue;
 	    if (!add_read(fp, line, rs, diff)) exit(1);
 	}
 	//aa.best_hyp(hy, rs, coverage);
     }
-    fprintf(outp, last_line);
+    fprintf(outp, "%s", last_line);
     vh = vhscore(last_line);
     aa.best_hyp(hy, rs, coverage, vh);
     if (num_error > 0) {

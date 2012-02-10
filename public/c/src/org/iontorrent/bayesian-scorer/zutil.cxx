@@ -762,7 +762,7 @@ int panel_number(char *id)
 int  skip2end(FILE *fp, char *s, int ll, FILE *fp1)
 {
     do {
-	if (fp1) fprintf(fp1, s);
+	if (fp1) fprintf(fp1, "%s", s);
 	int i = strlen(s);
 	if (s[i-1] == '\n') return 1;
     } while (fgets(s, ll, fp));
@@ -782,7 +782,7 @@ int count_symbol(char *s, char a) {
      return x;
 }
 
-void output_progress(char *progress_file, double a, char *name)
+void output_progress(char *progress_file, double a, const char *name)
 {
     if (progress_file) {
         FILE *fp = ckopen(progress_file, "w");
