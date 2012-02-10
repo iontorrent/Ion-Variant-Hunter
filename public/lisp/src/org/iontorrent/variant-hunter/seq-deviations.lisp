@@ -1006,12 +1006,24 @@ Q/QCGA --(trim left) --> -/CGA
 (defgeneric get-flow-number-range (seq-dev))
 (defmethod get-flow-number-range ((seq-dev seq-deviation))
   (let ((ri (or (residual-infos seq-dev)
-		(merged-residual-infos seq-dev))))
+		(merged-residual-infos seq-dev)))
+	low-flow
+	high-flow)
+    (dolist (i-ri ri)
+      (when (second i-ri)
+	(unless low-flow
+	  (setq low-flow (second i-ri)))
+	(setq high-flow (second i-ri))))
+    (when low-flow
+      (cons low-flow high-flow))))
+#|
     (cons
      (or (second (car ri))  ;;TODO bug to fix, somethings this is NIL
 	 (second (second ri)))
      (second (find-if #'numberp ri :key #'second :from-end t))) ;;(car (last ri))
     ))
+|#
+
 
 (defgeneric calc-ends-of-read-factor (seq-dev))
 (defmethod calc-ends-of-read-factor  ((seq-dev seq-deviation))
@@ -1020,6 +1032,9 @@ Q/QCGA --(trim left) --> -/CGA
 	(range (get-flow-number-range seq-dev))
 	num-bases-from-end
 	)
+    (unless range
+      (setf (issue seq-dev) :no-flow-intensity-positions)
+      (return-from calc-ends-of-read-factor nil))
     (with-slots (min-flow max-flow)
 	seq-dev
       (setq num-bases-from-end
@@ -1043,7 +1058,7 @@ Q/QCGA --(trim left) --> -/CGA
 					  distance-dev-flows distance-nondev-flows)
       (get-signal-deviations seq-dev)
     (values
-     (* (calc-ends-of-read-factor seq-dev)
+     (* (or (calc-ends-of-read-factor seq-dev) 0)
 	(calc-deviation-score num-deleted-flows num-inserted-flows
 			      distance-dev-flows distance-nondev-flows))
      num-deleted-flows num-inserted-flows
