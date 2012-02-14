@@ -37,6 +37,8 @@
 		  seq
 		  (reverse-complement seq)) 0 (- (length seq) end-trim)))))
 
+;; Used only in LISP flow aligner, which is basically replaced by
+;; the JAVA implementation of this.
 (defgeneric get-relevant-flow-intensities (bam &optional key-seq flow-order))
 (defmethod get-relevant-flow-intensities ((bam bam-record)
 					  &optional
@@ -280,7 +282,7 @@
 	   (or query-flow-intensities
 	       (mapcar #'(lambda (x)
 			   (/ x 100))
-		       (get-relevant-flow-intensities bam)))))
+		       (get-relevant-flow-intensities bam flow-order)))))
       (setq query-flow-seq
 	    (let ((counter -1))
 	      (mapcar #'(lambda (counts)
@@ -446,6 +448,10 @@
 
 				max-deviation-cache-size
 				vh-num-threads
+
+				;; vcf formatting
+				;;vcf-info-field-format
+
 				;; filters
 				min-mapq
 				score-threshold min-num-reads min-variant-freq
@@ -486,6 +492,8 @@
       (setf (gethash :validate-alignments settings-hash) validate-alignments)
       (setf (gethash :vh-num-threads settings-hash) vh-num-threads)
       (setf (gethash :max-deviation-cache-size settings-hash) max-deviation-cache-size) ;;150000
+      ;;(setf (gethash :vcf-info-field-format settings-hash) vcf-info-field-format)
+
       (set-filters settings-hash
 		   :min-mapq min-mapq
 		   :score-threshold score-threshold 
@@ -530,8 +538,10 @@
       (push (format nil "fileformat=VCFv4.1") header-parts))
     (push (format nil "fileDate=~a" (format-current-date :no-dividers)) header-parts)
     (push (format nil "fileTime=~a" (format-current-time :no-dividers)) header-parts)
-    (push (format nil "source=~a" "IonVariantHunterV0.0.2") header-parts)
-
+    (push (format nil "source=IonVariantHunter~a"
+		  (if (boundp '*build-date*)
+		      (format nil ".v.~a" *vh-version*)
+		      "")) header-parts)
     (with-slots (bam-file sam-file settings-hash)
 	streamer
       (when (gethash :ref-reader settings-hash)
@@ -554,7 +564,6 @@
   (let ((col-names '(CHROM POS ID REF ALT QUAL FILTER INFO)))
     (format stream (format nil "#~~{~~a~~^~a~~}~%" #\Tab)
 	    col-names)))
-
 
 ;; These files aren't needed but could be outputted for debugging purposes
 (defgeneric open-n-print-headers-intermediate-files (streamer))
@@ -1186,7 +1195,7 @@
 		    (extract-from-sorted-list (- (ref-pos cur-bam) 1) seq-deviation-cache
 					      :from-end t :test #'> :key #'absolute-target-pos)))
 		(when (< (* 4 (length seq-deviation-cache)) (length temp-unsorted-cache))
-		  (format *error-output* "Warning, there may be repeated indel calls because not enough of the cache could be cleared.~%")
+		  (format *error-output* "Warning, there may be repeated indel calls because not enough of the cache could be cleared. Try increasing --max-deviation-cache-size.~%")
 		  (setq seq-deviation-cache (append seq-deviation-cache temp-unsorted-cache))
 		  (setq temp-unsorted-cache nil))
 		)
@@ -1321,6 +1330,9 @@
 					  max-deviation-cache-size 
 					  vh-num-threads
 
+					  ;; vcf format
+					  ;;vcf-info-field-format
+
 					  ;; filters
 					  min-mapq
 					  score-threshold min-num-reads
@@ -1351,6 +1363,9 @@
 
 			 :max-deviation-cache-size max-deviation-cache-size 
 			 :vh-num-threads vh-num-threads
+
+			 ;; vcf format
+			 ;;:vcf-info-field-format vcf-info-field-format
 
 			 ;; filters
 			 :min-mapq min-mapq
@@ -1385,6 +1400,7 @@
 	  ;; Headers
 	  (print-generic-header align-streamer merged :merged-deviation)
 	  (print-generic-header align-streamer variant :variant)
+	  ;;(print-vcf-header-info-description (settings-hash align-streamer) variant)
 	  (print-filter-settings (settings-hash align-streamer) merged)
 	  (print-filter-settings (settings-hash align-streamer) variant)
 	  (print-vcf-header-column-names variant)

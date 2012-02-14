@@ -14,6 +14,7 @@
 
 (defvar *build-date* "")
 (defvar *build-time* "")
+(defvar *vh-version* "0.1.3.alpha")
 
 (defvar *from-built-exec* nil)
 
@@ -21,7 +22,7 @@
 ;; Evaluation loop (for interactive sessions)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun splash ()
-  (format t "~%Ion Variant Hunter~%")
+  (format t "~%Ion Variant Hunter v~a~%" *vh-version*)
   (format t "Binary: ~a~%" (car *posix-argv*))
   (format t "Build date: ~a~%Build time: ~a~%" *build-date* *build-time*)
 )
