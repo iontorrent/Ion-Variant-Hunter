@@ -9,12 +9,12 @@
 (defvar *src-files*)
 (setq *src-files* (list  "util.lisp" "stats.lisp" "parse-util.lisp" "reference.lisp" "sam-parse.lisp" "flow-space.lisp" "seq-deviations.lisp" "alignment-streamer.lisp" "ion-variant-hunter.lisp"))
 
+(defvar *vh-version* "0.1.3.alpha")
 (dolist (src-file *src-files*)
   (load src-file))
 
 (defvar *build-date* "")
 (defvar *build-time* "")
-(defvar *vh-version* "0.1.3.alpha")
 
 (defvar *from-built-exec* nil)
 
