@@ -26,3 +26,4 @@ sbcl --eval '(progn (load "system.lisp") (build "'$1'"))'
 
 mv $DIR/src/org/iontorrent/variant-hunter/ion-variant-hunter-core $DIR
 cp -p $DIR/scripts/samRegionOverlap.py $DIR
+cp -p $DIR/util/filter_indels.py $DIR

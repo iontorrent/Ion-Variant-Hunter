@@ -450,7 +450,7 @@
 				vh-num-threads
 
 				;; vcf formatting
-				;;vcf-info-field-format
+				vcf-tag-format
 
 				;; filters
 				min-mapq
@@ -492,7 +492,7 @@
       (setf (gethash :validate-alignments settings-hash) validate-alignments)
       (setf (gethash :vh-num-threads settings-hash) vh-num-threads)
       (setf (gethash :max-deviation-cache-size settings-hash) max-deviation-cache-size) ;;150000
-      ;;(setf (gethash :vcf-info-field-format settings-hash) vcf-info-field-format)
+      (setf (gethash :vcf-tag-format settings-hash) vcf-tag-format)
 
       (set-filters settings-hash
 		   :min-mapq min-mapq
@@ -1262,7 +1262,7 @@
 ;; This will do it all, it will wash your car, it will clean up your house, it
 ;; will even do variant calling.  All you have to do is ask your torrent server.
 (defmethod do-variant-calling ((streamer alignment-streamer))
-  (with-slots (deviant-strm variant-strm cur-process)
+  (with-slots (deviant-strm variant-strm cur-process settings-hash)
       streamer
     ;; Retrieve the deviations and then sort them
     (with-slots (seq-deviation-cache)
@@ -1292,8 +1292,7 @@
 	(format t "A total of ~a variant candidates discovered.~%" (length variant-candidates))
 	;;So for each variant candidate
 	(setq cur-process :processing-variant-candidates)
-	(multi-thread-mutating-function  (gethash :vh-num-threads
-						  (settings-hash streamer))
+	(multi-thread-mutating-function  (gethash :vh-num-threads settings-hash)
 					 #'process-variant-candidates
 					 streamer variant-candidates)
 	(dolist (var-cand variant-candidates)
@@ -1301,8 +1300,8 @@
 	  (unless (overall-filtered? var-cand)
 	    (setq cur-process :printing-variant)
 	    ;; (push var-cand *chr1-73.642M-var-candidates*) ;; DEBUG!
-	    (print-variant-candidate var-cand variant-strm)
-	    (print-variant-candidate var-cand deviant-strm t))
+	    (print-variant-candidate var-cand variant-strm settings-hash)
+	    (print-variant-candidate var-cand deviant-strm settings-hash t))
 
 	  ;; Memory clean up
 	  ;;(unless (eql *debug-mode* :debug) ;; DEBUG
@@ -1331,7 +1330,7 @@
 					  vh-num-threads
 
 					  ;; vcf format
-					  ;;vcf-info-field-format
+					  vcf-tag-format
 
 					  ;; filters
 					  min-mapq
@@ -1365,7 +1364,7 @@
 			 :vh-num-threads vh-num-threads
 
 			 ;; vcf format
-			 ;;:vcf-info-field-format vcf-info-field-format
+			 :vcf-tag-format vcf-tag-format
 
 			 ;; filters
 			 :min-mapq min-mapq
@@ -1400,7 +1399,7 @@
 	  ;; Headers
 	  (print-generic-header align-streamer merged :merged-deviation)
 	  (print-generic-header align-streamer variant :variant)
-	  ;;(print-vcf-header-info-description (settings-hash align-streamer) variant)
+	  (print-vcf-header-tag-description variant (settings-hash align-streamer))
 	  (print-filter-settings (settings-hash align-streamer) merged)
 	  (print-filter-settings (settings-hash align-streamer) variant)
 	  (print-vcf-header-column-names variant)
@@ -1510,8 +1509,9 @@
 					   merged-file unmerged-file variant-file)
   (let (
 	variant-candidates
+	(settings-hash (make-hash-table))
 	)
-    ;; write merged, leftmost adjusted deviation list
+        ;; write merged, leftmost adjusted deviation list
     ;;     (with-open-file (merged merged-file :direction :output :if-exists :rename)
     ;;	(print-seq-deviations merged-deviations merged t))
 
@@ -1534,8 +1534,8 @@
 	    ;; Get the uniq set of sequence deviations
 	    (group-sequence-deviations var-cand)
 	    ;; Print out candidate
-	    (print-variant-candidate var-cand variant)
-	    (print-variant-candidate var-cand merged t)
+	    (print-variant-candidate var-cand variant settings-hash)
+	    (print-variant-candidate var-cand merged settings-hash t)
 	    )))
     (values
      variant-candidates)))

@@ -73,6 +73,7 @@
 		</exec>
 		<move file="${lisp.dir}/ion-variant-hunter-core" todir="${build}" />
 		<move file="${lisp.dir}/samRegionOverlap.py" todir="${build}" />
+		<move file="${lisp.dir}/filter_indels.py" todir="${build}" />
 		<move todir="${build}">
 			<fileset dir="${c.dir}" includes="bayesian-vh-rescorer"/>
 		</move>
@@ -108,7 +109,10 @@
 			<arg value="-p" />
 			<arg value="${build}/ion-variant-hunter-core" />
 			<arg value="${build}/samRegionOverlap.py" />
+			<arg value="${build}/filter_indels.py" />
 			<arg value="${build}/bayesian-vh-rescorer" />
+			<arg value="README" />
+			<arg value="RUNNING" />
 			<arg value="${dist}/" />
 		</exec>
 	</target>

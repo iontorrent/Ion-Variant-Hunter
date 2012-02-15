@@ -870,6 +870,7 @@ Q/QCGA --(trim left) --> -/CGA
    (num-spanning-reads :accessor num-spanning-reads :initform nil)
    (num-spanning-ref-reads :accessor num-spanning-ref-reads :initform nil)
    (num-plus-spanning-reads :accessor num-plus-spanning-reads :initform nil)
+   (num-variant-reads :accessor num-variant-reads :initform nil)
    (variant-freq :accessor variant-freq :initform nil)
    (zygosity-call :accessor zygosity-call :initform nil)
 
@@ -1179,6 +1180,12 @@ Q/QCGA --(trim left) --> -/CGA
 	(t
 	 :no-call)))
 
+(defun zygosity-to-genotype-call (zygosity-call)
+  (case zygosity-call
+    (:homozygous "1/1")
+    (:heterozygous "0/1")
+    (t ".")))
+
 ;; Set total read counts
 (defgeneric calc-spanning-reads-n-freqs (var-cand &optional total-spanning-reads total-plus-spanning-reads spanning-read-names))
 (defmethod calc-spanning-reads-n-freqs ((var-cand variant-candidate) &optional total-spanning-reads total-plus-spanning-reads spanning-read-names)
@@ -1186,8 +1193,11 @@ Q/QCGA --(trim left) --> -/CGA
   ;; Optional parameters are used to set the spanning read counts from python call.
   (with-slots (scores-n-q-t-seqs seq-dev-hash
 				 num-spanning-ref-reads zygosity-call
+				 num-variant-reads
 				 num-spanning-reads num-plus-spanning-reads variant-freq variant-freqs-by-score)
       var-cand
+
+    (setq num-variant-reads nil)
     (when (and total-spanning-reads total-plus-spanning-reads)
       (setq num-spanning-reads total-spanning-reads)
       (setq num-plus-spanning-reads total-plus-spanning-reads))
@@ -1203,8 +1213,10 @@ Q/QCGA --(trim left) --> -/CGA
 					(mapcar #'bam seq-devs))
 				read-name-sets)
 			  (incf total-variant-reads num-reads-for-seq)
+			  (push num-reads-for-seq num-variant-reads)
 			  num-reads-for-seq))
 		    scores-n-q-t-seqs))
+      (setq num-variant-reads (reverse num-variant-reads))
 
       ;; Have info to calc. num-spanning-ref-reads
       ;; Other case is just recalc. after filtering
@@ -1396,10 +1408,75 @@ Q/QCGA --(trim left) --> -/CGA
 	    mapq0-counts)))
 
 ;; This is in VCF format
+(defun print-vcf-header-tag-description-set (column-name stream ids is-numbs dtypes descriptions)
+  (mapc #'(lambda (id is-numb dtype description)
+	    (format stream "##~a=<ID=~a,Number=~a,Type=~a,Description=\"~a\">~%"
+		    column-name
+		    id (if is-numb is-numb ".") (or dtype "String") description))
+	ids is-numbs dtypes descriptions))
+
+(defun print-vcf-header-tag-description (stream settings-hash)
+
+  (when (find :score (gethash :vcf-tag-format settings-hash))
+    (print-vcf-header-tag-description-set
+     "INFO"
+     stream
+     '("Score" "Bayesian_Score")
+     '(1 1)
+     '("Float" "Float")
+     '("Flow based score"
+       "Bayesian score")))
+
+  (when (find :info (gethash :vcf-tag-format settings-hash))
+    (print-vcf-header-tag-description-set
+     "INFO"
+     stream
+     '("Variant-freq" "Num-spanning-reads" "Num-spanning-by-strand" "Num-spanning-ref-reads" "LMPos" "RMPos" "Variants" "Variants-scores" "Variants-RMPos" "Variants-freqs" "Num-reads" "Plus-minus-strand-count" "Strand-probabilities" "Strand-probability" "Read-names" "Cigars" "MapQs" "MQ" "MQ0")
+     '(t t nil t t t nil nil nil nil nil nil nil 1 nil nil nil 1 1)
+     '("Float" "Integer" nil "Integer" "Integer" "Integer" nil nil nil nil nil nil nil
+       "Float" nil nil nil "Float" "Integer")
+     '("Number of variant reads / number of spanning reads"
+       "Number of reads that span both LM and RM positions"
+       "Above split by +/- strand"
+       "Number of spanning reads that are reference"
+       "Leftmost position"
+       "Rightmost position"
+       "All the variants found, variant/reference"
+       "Score for each variant found"
+       "Rightmost position of those individual variants"
+       "Variant frequencies"
+       "Number of reads for each variant"
+       "Counts on each strand, +/-"
+       "Bionomial probability of each variant seq."
+       "Overall bionomial probability"
+       "Read names that called the variant"
+       "CIGAR strings of those reads"
+       "MapQs of those reads"
+       "In VCF spec"
+       "In VCF spec")))
+
+  (when (find :genotype (gethash :vcf-tag-format settings-hash))
+    (print-vcf-header-tag-description-set
+     "FORMAT"
+     stream
+     '(GT GQ GL DP FDP AD AST ABQV)
+     '(1 1 nil 1 1 nil nil nil)
+     '("String" "Float" "String" "Integer" "Integer" "Integer" "Integer" "Integer")
+     '("Genotype"
+       "Genotype Quality"
+       "Genotype Likelihood, number of values is (#ALT+1)*(#ALT+2)/2"
+       "Read Depth"
+       "Filtered Read Depth"
+       "Allelic depths for the REF and ALT alleles in the order listed in the ALT field"
+       "Allelic unique start positions for the REF and ALT alleles in the order listed in the ALT field"
+       "Allelic average base qv for the REF and ALT alleles in the order listed  in the ALT field")))
+   nil)
+
 (defvar *vcf-list-size-limit* 250)
 
-(defgeneric print-variant-candidate (var-cand stream &optional with-deviants?))
+(defgeneric print-variant-candidate (var-cand stream settings-hash &optional with-deviants?))
 (defmethod print-variant-candidate ((var-cand variant-candidate) stream
+				    settings-hash
 				    &optional with-deviants?)
   (with-slots (ref-name leftmost-pos seq-deviations score
 			scores-n-q-t-seqs seq-dev-hash
@@ -1407,6 +1484,7 @@ Q/QCGA --(trim left) --> -/CGA
 			num-plus-spanning-reads
 			num-spanning-ref-reads
 			num-spanning-reads variant-freq
+			num-variant-reads
 			variant-freqs-by-score
 			zygosity-call)
       var-cand
@@ -1438,16 +1516,23 @@ Q/QCGA --(trim left) --> -/CGA
     (format stream "~a~a" "." #\Tab)
 
     ;; INFO
-    (format stream "Score=~3$;" score)
+    (when (find :score (gethash :vcf-tag-format settings-hash))
+      (format stream "Score=~3$;" score))
+
+    (when (find :info (gethash :vcf-tag-format settings-hash))
+
     (format stream "Variant-freq=~3$;" (or variant-freq :unknown))
     (format stream "Num-spanning-reads=~a;" num-spanning-reads)
     (format stream "Num-spanning-by-strand=~a/~a;" num-plus-spanning-reads
 	    (- num-spanning-reads num-plus-spanning-reads))
     (format stream "Num-spanning-ref-reads=~a;" num-spanning-ref-reads)
-    (format stream "Num-variant-reads=~{~a~^,~};"
+    (format stream "Num-variant-reads=~{~a~^,~};" num-variant-reads)
+    (unless (equal num-variant-reads
 	    (mapcar #'(lambda (q-t-seq)
 			(length (gethash q-t-seq seq-dev-hash)))
 		    (mapcar #'cdr scores-n-q-t-seqs)))
+      (format *error-output* "WARNING, old 0.1.2 Num-variant-reads calculation does not match current one.~%")
+      )
     (format stream "Zygosity=~a;" zygosity-call)
 
     (format stream "LMPos=~a;RMPos=~a;"  leftmost-pos max-rightmost)
@@ -1484,10 +1569,12 @@ Q/QCGA --(trim left) --> -/CGA
 		       (limit-size-lists-in-list
 			(get-tag-values accessor) *vcf-list-size-limit*)
 		       )))
-	(print-bam-tag "Read-names" #'read-name)
-	(print-bam-tag "Cigars" #'(lambda (item) (cigar-str (cigar item))))
-	;; mapq and MQ and MQ0
-	(print-bam-tag "MapQs" #'mapq)
+	(when (find :indiv-read-info (gethash :vcf-tag-format settings-hash))
+	  (print-bam-tag "Read-names" #'read-name)
+	  (print-bam-tag "Cigars" #'(lambda (item) (cigar-str (cigar item))))
+	  ;; mapq and MQ and MQ0
+	  (print-bam-tag "MapQs" #'mapq))
+
 	(multiple-value-bind (rms mapq0-counts)
 	    ;; TODO, for now, take top variant only
 	    (when (get-tag-values #'mapq)
@@ -1495,6 +1582,23 @@ Q/QCGA --(trim left) --> -/CGA
 	  (format stream "MQ=~,4f;" rms)
 	  (format stream "MQ0=~a;" mapq0-counts))
 	)
+      )
+    )
+    (when (find :genotype (gethash :vcf-tag-format settings-hash))
+      ;; Format field (9th column)
+      (format stream "~aGT:GQ:GL:DP:FDP:AD:AST:ABQV~a" #\Tab #\Tab)
+      ;; Genotype field (10th column)
+      (format stream "~a:" (zygosity-to-genotype-call zygosity-call))  ;; GT
+      (format stream "~a:" ".") ;; GQ
+      (format stream "~a:" ".") ;; GL
+      (format stream "~a:" (+  num-spanning-ref-reads (car num-variant-reads))) ;; DP
+      (format stream "~a:" ".") ;; FPD
+      (format stream "~a,~a:" num-spanning-ref-reads (car num-variant-reads))   ;; AD
+      ;; TODO, DP and AD only include counts for only one of the variant sequences, whereas
+      ;; variant-freq includes all variant sequences.  This is because VAR column
+      ;; only includes only one of the variants.
+      (format stream "~a:" ".") ;; AST
+      (format stream "~a" ".")  ;; ABQV
       )
     (when with-deviants?
       (format stream "~%")

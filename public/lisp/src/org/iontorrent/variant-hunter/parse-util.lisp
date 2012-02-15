@@ -136,7 +136,15 @@
 			       arg-part)))
 		    arg-parts))
       (format nil "~{~a~^ ~}" new-args))))
-    
+
+(defun parse-string-to-intern-list (argument-string &optional (separator #\,)
+				    (intern-type :keyword))
+  (mapcar #'(lambda (arg-item)
+	      (intern
+	       arg-item
+	       intern-type))
+	  (parse-string (string-upcase argument-string) separator)))
+
 ;; filename utils
 (defun split-filename-base-and-extension (filename)
   (let ((last-period-pos

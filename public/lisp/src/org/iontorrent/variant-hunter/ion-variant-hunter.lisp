@@ -31,6 +31,9 @@
 						   (max-deviation-cache-size 300000)
 						   (vh-num-threads 4)
 
+						   ;; vcf format
+						   (vcf-tag-format "score,info,genotype")
+
 						   ;; filters
 						   (min-mapq 0)
 						   (score-threshold 4)
@@ -74,6 +77,7 @@
 	unmerged-deviations
 
 	)
+    (setq vcf-tag-format (parse-string-to-intern-list vcf-tag-format))
 
     (multiple-value-setq (align-file merged-file unmerged-file variant-file)
       (make-individual-filenames-for-hunter base-output-filename))
@@ -96,6 +100,9 @@
 
 					   :max-deviation-cache-size max-deviation-cache-size
 					   :vh-num-threads vh-num-threads
+
+					   ;; vcf format
+					   :vcf-tag-format vcf-tag-format
 
 					   ;;filters
 					   :min-mapq min-mapq
@@ -182,6 +189,14 @@
     (print-info :max-deviation-cache-size "The maximum number of reads to hold before variant calling is forced on.  Normally this is done only when a different contig is reached.")
     (print-info :dynamic-space-size "Dynamic memory space in megabytes.")
     (print-info :vh-num-threads "Variant hunter number of threads.")
+
+    (when (eql key-value :all)
+      (format stream "~%VCF output options:~%"))
+    (print-info :vcf-tag-format "Comma separated list of desired classes of tags to be printed to the VCF file, i.e. 'score,info,genotype,indiv-read-info'")
+    (format stream "    score            Displays scores~%")
+    (format stream "    info             Displays non-score INFO tags~%")
+    (format stream "    genotype         FORMAT and GENOTYPE columns~%")
+    (format stream "    indiv-read-info  Individual read information (i.e. name/CIGAR)~%")
 
     (when (eql key-value :all)
       (format stream "~%Filter options:~%"))
