@@ -492,7 +492,7 @@
       (setf (gethash :validate-alignments settings-hash) validate-alignments)
       (setf (gethash :vh-num-threads settings-hash) vh-num-threads)
       (setf (gethash :max-deviation-cache-size settings-hash) max-deviation-cache-size) ;;150000
-      (setf (gethash :vcf-tag-format settings-hash) vcf-tag-format)
+      (set-vcf-tag-format settings-hash vcf-tag-format)
 
       (set-filters settings-hash
 		   :min-mapq min-mapq
@@ -540,7 +540,8 @@
     (push (format nil "fileTime=~a" (format-current-time :no-dividers)) header-parts)
     (push (format nil "source=IonVariantHunter~a"
 		  (if (boundp '*build-date*)
-		      (format nil ".v.~a" *vh-version*)
+		      (flet ((sym-val (str) (symbol-value (intern str))))
+			(format nil ".v.~a" (sym-val "*VH-VERSION*")))
 		      "")) header-parts)
     (with-slots (bam-file sam-file settings-hash)
 	streamer
@@ -559,11 +560,6 @@
     
     (dolist (header-part (reverse header-parts))
       (format stream "##~a~%" header-part))))
-
-(defun print-vcf-header-column-names (stream)
-  (let ((col-names '(CHROM POS ID REF ALT QUAL FILTER INFO)))
-    (format stream (format nil "#~~{~~a~~^~a~~}~%" #\Tab)
-	    col-names)))
 
 ;; These files aren't needed but could be outputted for debugging purposes
 (defgeneric open-n-print-headers-intermediate-files (streamer))
@@ -1399,10 +1395,10 @@
 	  ;; Headers
 	  (print-generic-header align-streamer merged :merged-deviation)
 	  (print-generic-header align-streamer variant :variant)
-	  (print-vcf-header-tag-description variant (settings-hash align-streamer))
+	  (print-vcf-header-tag-description (settings-hash align-streamer) variant)
 	  (print-filter-settings (settings-hash align-streamer) merged)
 	  (print-filter-settings (settings-hash align-streamer) variant)
-	  (print-vcf-header-column-names variant)
+	  (print-vcf-header-column-names (settings-hash align-streamer) variant)
 
 	  ;; stream and call variants!
 	  (stream-alignments align-streamer)))

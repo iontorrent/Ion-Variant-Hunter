@@ -7,7 +7,7 @@
 ;;;;;;;;;;;;;;;;
 
 (defvar *src-files*)
-(setq *src-files* (list  "util.lisp" "stats.lisp" "parse-util.lisp" "reference.lisp" "sam-parse.lisp" "flow-space.lisp" "seq-deviations.lisp" "alignment-streamer.lisp" "ion-variant-hunter.lisp"))
+(setq *src-files* (list  "util.lisp" "stats.lisp" "parse-util.lisp" "reference.lisp" "sam-parse.lisp" "flow-space.lisp" "seq-deviations.lisp" "vcf-writer.lisp" "alignment-streamer.lisp" "ion-variant-hunter.lisp"))
 
 (defvar *vh-version* "0.1.3.alpha")
 (dolist (src-file *src-files*)
@@ -78,8 +78,12 @@
       )
     (when parsed-options
       (setq parsed-options (nreverse parsed-options))
-      (format t "~%Program executed with:~%~{~{~a~^ ~}~^~%~}~%" parsed-options)
-      )
+      (format t "~%Program executed with:~%")
+      (dolist (parsed-option parsed-options)
+	(format t "~a ~a~a~%"
+		(car parsed-option)
+		(if (stringp (second parsed-option)) "" ",")
+		(second parsed-option))))
     (values
      parsed-options
      binary-fn)))

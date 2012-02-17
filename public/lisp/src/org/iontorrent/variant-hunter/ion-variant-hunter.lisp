@@ -77,8 +77,6 @@
 	unmerged-deviations
 
 	)
-    (setq vcf-tag-format (parse-string-to-intern-list vcf-tag-format))
-
     (multiple-value-setq (align-file merged-file unmerged-file variant-file)
       (make-individual-filenames-for-hunter base-output-filename))
 
