@@ -839,14 +839,19 @@ Q/QCGA --(trim left) --> -/CGA
   (when deviations
     (sort deviations #'seq-deviation<)))
 
+(defvar *common-issues*)
+(setq *common-issues* '(cannot-merge))
 
 (defgeneric remove-deviations-with-issues (deviations))
 (defmethod remove-deviations-with-issues ((deviations cons))
   (remove-if
    #'(lambda (deviation)
        (when (issue deviation)
-	 (format *error-output* "WARNING, sequence deviation has issue ~a which was found in ~a~%"
-		 (issue deviation) (get-basic-attrib-string (bam deviation)))
+	 (if (find (issue deviation) *common-issues*)
+	     (format t "Note, sequence deviation has issue ~a which was found in ~a~%"
+		     (issue deviation) (get-basic-attrib-string (bam deviation)))
+	     (format *error-output* "WARNING, sequence deviation has issue ~a which was found in ~a~%"
+		     (issue deviation) (get-basic-attrib-string (bam deviation))))
 	 t))
    deviations)
   )
@@ -1251,6 +1256,7 @@ Q/QCGA --(trim left) --> -/CGA
 	 ))))
 
 ;;(defvar *debug-variant-candidate* nil)
+(defvar *min-reads-for-sb-bias-calculation* 10)
 
 (defun calc-strand-bias (num-plus-spanning-reads num-spanning-reads
 			 num-plus-variant num-variant)
@@ -1258,8 +1264,8 @@ Q/QCGA --(trim left) --> -/CGA
   ;; 0 is no bias
   ;; 1 is bias on one, but not biased on other
   ;; 2 is each one is completely on different strands
-  (when (and (> num-spanning-reads 10)
-	     (> num-variant 10))
+  (when (and (> num-spanning-reads *min-reads-for-sb-bias-calculation*)
+	     (> num-variant *min-reads-for-sb-bias-calculation*))
     (let ((overall-ratio
 	   (/ num-plus-spanning-reads num-spanning-reads))
 	  (variant-ratio
@@ -1320,15 +1326,17 @@ Q/QCGA --(trim left) --> -/CGA
 			    strand-bias-scores
 			    strand-counts strand-probs
 			    rightmost-positions
+			    num-variant-reads
 			    overall-filtered?)
       var-cand
     (let (new-scores new-var-freqs new-strand-counts new-strand-probs
 		     new-strand-bias-scores
-		     new-rightmost-positions)
+		     new-rightmost-positions
+		     new-num-variant-reads)
       ;;(setq variants-filtered?
 	    (mapcar
 	     #'(lambda (score-n-q-t-seq var-freq 
-			strand-bias strand-count strand-prob rightmost-pos)
+			strand-bias strand-count strand-prob rightmost-pos num-variant-read)
 		 (let ((num-reads (length (gethash (cdr score-n-q-t-seq) seq-dev-hash)))
 		       (score (car score-n-q-t-seq))
 		       dofilter?)
@@ -1349,11 +1357,13 @@ Q/QCGA --(trim left) --> -/CGA
 		     (push strand-count new-strand-counts)
 		     (push strand-prob new-strand-probs)
 		     (push rightmost-pos new-rightmost-positions)
+		     (push num-variant-read new-num-variant-reads)
 		     )
 		   dofilter?))
 	     scores-n-q-t-seqs
 	     (or variant-freqs-by-score (make-list (length scores-n-q-t-seqs)))
-	     strand-bias-scores strand-counts strand-probs rightmost-positions) ;;)
+	     strand-bias-scores strand-counts strand-probs rightmost-positions
+	     (or num-variant-reads (make-list (length rightmost-positions)))) ;;)
 
       (setq scores-n-q-t-seqs (reverse new-scores))
       (setq variant-freqs-by-score (reverse new-var-freqs))
@@ -1361,6 +1371,7 @@ Q/QCGA --(trim left) --> -/CGA
       (setq strand-counts (reverse new-strand-counts))
       (setq strand-probs (reverse new-strand-probs))
       (setq rightmost-positions (reverse new-rightmost-positions))
+      (setq num-variant-reads (reverse new-num-variant-reads))
 
       (setq overall-filtered? (if scores-n-q-t-seqs nil t))    
       )))

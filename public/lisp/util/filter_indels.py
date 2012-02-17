@@ -11,6 +11,12 @@ def usage():
     global progName
     sys.stderr.write("Usage: %s [--min-bayesian-score=<float>] <input vcf> <output vcf>\n" % progName)
 
+def chompLastSemi(input):
+    output = input;
+    if output[-1] == ';':
+        output = output[:-1]
+    return output
+
 def main(argv):
     # arg processing
     global progName
@@ -46,7 +52,8 @@ def main(argv):
             attr={}
             fields = lines.split('\t')
             variant = 0
-            info = fields[7].split(';')
+            info = fields[7]
+            info = chompLastSemi(info[:-1]).split(';')
             for items in info:
                 key,val = items.split('=')
                 attr[key]=val

@@ -9,16 +9,16 @@
 (defclass vcf-tag ()
   ((vcf-tag-category :accessor vcf-category :initarg :vcf-tag-category)
    (vcf-tag-id :accessor vcf-tag-id :initarg :vcf-tag-id)
-   (vcf-tag-datatype :accessor vcf-tag-datatype :initarg :vcf-tag-datatype)
    (vcf-tag-number :accessor vcf-tag-number :initarg :vcf-tag-number)
+   (vcf-tag-datatype :accessor vcf-tag-datatype :initarg :vcf-tag-datatype)
    (vcf-tag-desc :accessor vcf-tag-desc :initarg :Vcf-tag-desc)))
 
-(defun make-vcf-tag-obj (vcf-tag-category vcf-tag-id vcf-tag-datatype vcf-tag-number vcf-tag-desc)
+(defun make-vcf-tag-obj (vcf-tag-category vcf-tag-id vcf-tag-number vcf-tag-datatype vcf-tag-desc)
   (make-instance 'vcf-tag
 		 :vcf-tag-category vcf-tag-category
 		 :vcf-tag-id vcf-tag-id
-		 :vcf-tag-datatype vcf-tag-datatype
 		 :vcf-tag-number vcf-tag-number
+		 :vcf-tag-datatype vcf-tag-datatype
 		 :vcf-tag-desc vcf-tag-desc))
 
 (defun make-vcf-tag-objs (list-of-vcf-tag-attribs)
@@ -32,9 +32,16 @@
   (with-slots (vcf-tag-category vcf-tag-id vcf-tag-datatype
 				vcf-tag-number vcf-tag-desc)
       vcf-tag
-    (format stream "##~a=<ID=~a,Number=~a,Type=~a,Description=\"~a\">~%"
-	    vcf-tag-category vcf-tag-id vcf-tag-datatype
-	    (or vcf-tag-number ".") vcf-tag-desc)))
+    (let ((vcf-tag-datatype-string
+	   (format nil "~a" vcf-tag-datatype)))
+      (setq vcf-tag-datatype-string
+	    (format nil "~a~a"
+		    (string-upcase (char vcf-tag-datatype-string 0))
+		    (string-downcase (subseq vcf-tag-datatype-string 1))))
+      (format stream "##~a=<ID=~a,Number=~a,Type=~a,Description=\"~a\">~%"
+	      vcf-tag-category vcf-tag-id (or vcf-tag-number ".")
+	      vcf-tag-datatype-string
+	      vcf-tag-desc))))
 
 (defgeneric print-vcf-tags-for-vcf-header (vcf-tags stream))
 (defmethod print-vcf-tags-for-vcf-header ((vcf-tags cons) stream)
@@ -57,29 +64,35 @@
       ;; Dealing with other parts of INFO
       (populate-tag-hash
        :INFO 
-       '(
-	 (:INFO "Variant-freq" 1 :FLOAT "Number of variant reads / number of spanning reads")
-	 (:INFO "Num-spanning-reads" 1 :INTEGER "Number of reads that span both LM and RM positions")
-	 (:INFO "Num-spanning-by-strand" nil :STRING "Above split by +/- strand")
-	 (:INFO "Num-spanning-ref-reads" 1 :INTEGER "Number of spanning reads that are reference")
-	 (:INFO "Num-variant-reads" nil :STRING "List of number of variant reads")
-	 (:INFO "Zygosity" nil :STRING "Zygosity call")
-	 (:INFO "LMPos" 1 :INTEGER "Leftmost position")
-	 (:INFO "RMPos" 1 :INTEGER "Rightmost position")
-	 (:INFO "Variants" nil :STRING "All the variants found, variant/reference")
-	 (:INFO "Variants-scores" nil :STRING "Score for each variant found")
-	 (:INFO "Variants-RMPos" nil :STRING "Rightmost position of those individual variants")
-	 (:INFO "Variants-freqs" nil :STRING "Variant frequencies")
-	 (:INFO "Num-reads" nil :STRING "Number of reads for each variant")
-	 (:INFO "Plus-minus-strand-counts" nil :STRING "Counts on each strand, +/-")
-	 (:INFO "Strand-probabilities" nil :STRING "Bionomial probability of each variant seq.")
-	 (:INFO "Strand-probability" 1 :FLOAT "Overall bionomial probability")
-	 (:INFO "Read-names" nil :STRING "Read names that called the variant")
-	 (:INFO "Cigars" nil :STRING "CIGAR strings of those reads")
-	 (:INFO "MapQs" nil :STRING "MapQs of those reads")
-	 (:INFO "MQ" 1 :FLOAT "RMS mapping quality")
-	 (:INFO "MQ0" 1 :INTEGER "Number of MAPQ == 0 reads covering this record")
-	 ))
+       (append
+	'(
+	  (:INFO "Variant-freq" 1 :FLOAT "Number of variant reads / number of spanning reads")
+	  (:INFO "Num-spanning-reads" 1 :INTEGER "Number of reads that span both LM and RM positions")
+	  (:INFO "Num-spanning-by-strand" nil :STRING "Above split by +/- strand")
+	  (:INFO "Num-spanning-ref-reads" 1 :INTEGER "Number of spanning reads that are reference")
+	  (:INFO "Num-variant-reads" nil :STRING "List of number of variant reads")
+	  (:INFO "Zygosity" nil :STRING "Zygosity call")
+	  (:INFO "LMPos" 1 :INTEGER "Leftmost position")
+	  (:INFO "RMPos" 1 :INTEGER "Rightmost position")
+	  (:INFO "Variants" nil :STRING "All the variants found, reported as variant/reference, sorted by Variants-scores. Only the highest scoring one is reported in the ALT column.")
+	  (:INFO "Variants-scores" nil :STRING "Score for each variant found")
+	  (:INFO "Variants-RMPos" nil :STRING "Rightmost position of those individual variants")
+	  (:INFO "Variants-freqs" nil :STRING "Variant frequencies")
+	  (:INFO "Num-reads" nil :STRING "Number of reads for each variant")
+	  (:INFO "Plus-minus-strand-counts" nil :STRING "Counts on each strand, +/-")
+	  )
+	(list
+	 (list :INFO "Strand-bias-scores" nil :STRING (format nil "Strand bias score for each variant. Strand bias = 2 * abs ( varRatio - overallRatio), where varRatio and overallRatio are the proportion of plus strand hits for the variants and for all the spanning reads, respectively.  A minimum of ~a reads for both the variant and spanning reads required, otherwise value will be NIL." *min-reads-for-sb-bias-calculation*)))
+	'(
+	  (:INFO "SB" nil :STRING "Strand bias score for the single variant reported in the ALT column.")
+	  (:INFO "Strand-probabilities" nil :STRING "Bionomial probability of each variant seq.")
+	  (:INFO "Strand-probability" 1 :FLOAT "Overall bionomial probability")
+	  (:INFO "Read-names" nil :STRING "Read names that called the variant")
+	  (:INFO "Cigars" nil :STRING "CIGAR strings of those reads")
+	  (:INFO "MapQs" nil :STRING "MapQs of those reads")
+	  (:INFO "MQ" 1 :FLOAT "RMS mapping quality")
+	  (:INFO "MQ0" 1 :INTEGER "Number of MAPQ == 0 reads covering this record")
+	  )))
       ;; Dealing with Genotype
       (populate-tag-hash
        :GENOTYPE
