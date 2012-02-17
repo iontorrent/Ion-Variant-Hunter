@@ -6,7 +6,7 @@
 #define POSTERIOR_PROB_H_
 
 #define MAX_LEN 80
-#define NUM_H 90000
+#define NUM_H 900000
 #define MINI_PEN 0.6
 #define DEL_PENALTY 30.0
 #define CONTEXT 3
@@ -20,14 +20,14 @@ class flow_list
 	flow_list() {reset();}
 	void reset() {num_h = 0;}
 	void add_list(unsigned char *s, int *f, int len) {
-	    if (num_h >= NUM_H) {fprintf(stderr, "too many hyp\n"), exit(1);} //
+	    if (num_h >= NUM_H) {return; fprintf(stderr, "too many hyp\n"), exit(1);} //
 	    length[num_h] = len;
 	    int i;
 	    for (i = 0; i < len; i++) {seq[num_h][i] = s[i]; flow[num_h][i] = f[i];}
 	    num_h++;
 	}
 	void add_list(unsigned char *s, int *f, int len, double p) {
-	    if (num_h >= NUM_H) {fprintf(stderr, "too many hyp\n"), exit(1);}
+	    if (num_h >= NUM_H) {return; fprintf(stderr, "too many hyp\n"), exit(1);}
 	    prior[num_h] = p;
 	    add_list(s, f, len);
 	}
@@ -80,7 +80,7 @@ class flow_poster_prob_calc
 	    unsetRef();
 	    return x;
 	}
-	double best_hyp(flow_list *alter_hyp, flow_list *read_list, int cov, float vh);
+	double best_hyp(flow_list *alter_hyp, flow_list *read_list, int cov, float vh, char *line);
 	void setRef(int n, unsigned char *rs, int *rm) { 
 	    ref = rs; rlen = n; ref_r = rm;
 	    int i;

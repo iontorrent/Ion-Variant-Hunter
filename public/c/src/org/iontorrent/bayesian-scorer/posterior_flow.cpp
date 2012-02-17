@@ -13,9 +13,27 @@
 #define sizeofline 10000000
 static FILE *outp = stdout;
 static FILE *logfile = stderr;
+static char *hotfile = NULL;
+static int neighbor = 0;
 static int num_error = 0;
 static int cur_pos;
 static int debug = 0;
+static float bscore_cut = 0.0;
+
+// line will be changed.
+void output_line(float bsc, char *line)
+{
+	if (line == NULL || line[0] == 0) fatal("input vcf line empty\n");
+	char *begin_of_8th = line;
+	int i;
+	for (i = 0; i < 7; i++) {
+            begin_of_8th = strchr(begin_of_8th, '\t');
+            if (begin_of_8th == NULL) fatal("input vcf line does not have INFO (8th) field: %s\n", line);
+	    begin_of_8th++;
+	}
+	*(begin_of_8th-1) = 0; 
+	fprintf(outp, "%s\tBayesian_Score=%f;%s\n", line, bsc, begin_of_8th);
+}
 
 double poisson (double x, double Lam)
 {
@@ -190,7 +208,7 @@ double flow_poster_prob_calc::prob_ins(unsigned char refbase, int len, unsigned 
     return x*y;
 }
 
-double flow_poster_prob_calc::best_hyp(flow_list *alter_hyp, flow_list *read_list, int cov, float vh)
+double flow_poster_prob_calc::best_hyp(flow_list *alter_hyp, flow_list *read_list, int cov, float vh, char *line_out)
 {
     int num_hyp = alter_hyp->num_list();
     int best = -1;
@@ -244,10 +262,11 @@ double flow_poster_prob_calc::best_hyp(flow_list *alter_hyp, flow_list *read_lis
 	//printf("PPP=Refe="); alter_hyp->output_hyp(0); 
     	//printf("PPP=Call="); alter_hyp->output_hyp(best);
 	xxx = xxx*0.63;  // normalization
-	fprintf(outp, "Bayesian_Score=%f\n", (float) xxx);
+	output_line(xxx, line_out);
     } else {
 	//printf("PPP1=Refe="); alter_hyp->output_hyp(0);
-	fprintf(outp, "Bayesian_Score=0\n");
+	output_line(0.0, line_out);
+	//fprintf(outp, "Bayesian_Score=0\n");
     }
 }
 
@@ -268,7 +287,7 @@ static unsigned char code(char a)
     if (a == 'G') return 2;
     if (a == 'T') return 3;
     if (a == 'N') return 0;
-    fatal("%c not ACGT\n", a);
+    fatal("not ACGT %d %c\n", a, a);
 }
 
 static int getflow(unsigned char *f, int *fs, const char *s, int left, int right, char *seq, int co)
@@ -277,6 +296,8 @@ static int getflow(unsigned char *f, int *fs, const char *s, int left, int right
     const char *ss = s+left;
     //printf("%s %d %d %d\n", seq, left, right, co);
     i = co-1;
+    if (i > left) i = left;
+    int j = i; 
     char a = *ss;
     char ac[] = "ACGT";
     int count = 0;
@@ -291,7 +312,8 @@ static int getflow(unsigned char *f, int *fs, const char *s, int left, int right
 	ss--;
     }
     ss = seq;
-    i = co-1; a = ac[f[i]]; count = fs[i];
+    i = j; a = ac[f[i]]; count = fs[i];
+    if (i < 0) {a = *ss; i = 0; count = 0;} //left is -1
     while (*ss && *ss != '.') {
 	if (toupper(*ss) != toupper(a)) {
             fs[i] = count;
@@ -304,7 +326,7 @@ static int getflow(unsigned char *f, int *fs, const char *s, int left, int right
     }
     ss = s+right;
     if (toupper(*ss) == toupper(a)) co--;
-    while (co >= 0) {
+    while (co >= 0 && *ss) {
         if (toupper(*ss) != toupper(a)) {
             fs[i] = count;
             count = 1;
@@ -610,7 +632,7 @@ main(int argc, char *argv[])
     */
 
     if (argc < 4) {
-	fprintf(stderr, "%s ref_file devfile flow_order_string output_vcffile [input_vcffile] [-log logfile]", argv[0]);
+	fprintf(stderr, "%s ref_file devfile flow_order_string output_vcffile [input_vcffile] [-log logfile] [-min_score bayscore_cutoff] [-neighbor ##] [-hotspot_file filename]", argv[0]);
 	exit(1);
     }
     FastaFile *fafile = new FastaFile(SEQTYPE_NT);
@@ -637,6 +659,12 @@ main(int argc, char *argv[])
 		    logfile = ckopen(argv[i+1], "w");
 		} else if (strcmp(argv[i]+1, "debug")==0|| strcmp(argv[i]+1, "d")) {
 		    debug = atoi(argv[i+1]);
+ 		} else if (strcmp(argv[i]+1, "min_score")==0) {
+		    bscore_cut = atof(argv[i+1]);
+                } else if (strcmp(argv[i]+1, "neighbor")==0) {
+		    neighbor =  atoi(argv[i+1]);
+                } else if (strcmp(argv[i]+1, "hotspot_file")) {
+		    hotfile = argv[i+1]; 
 		} else {
 		    fprintf(stderr, "wrong option %s\n", argv[i]);
 		    exit(1);
@@ -691,9 +719,9 @@ main(int argc, char *argv[])
 	    need_check = 0;
 	} else {
 	    if (last_line[0] != 0) {
-		fprintf(outp, "%s", last_line);
+		//fprintf(outp, "%s", last_line);
 		vh = vhscore(last_line);
-		aa.best_hyp(hy, rs, coverage, vh);
+		aa.best_hyp(hy, rs, coverage, vh, last_line);
 	    }
             hy->reset();
             rs->reset();
@@ -709,13 +737,13 @@ main(int argc, char *argv[])
 	while (fgets(line, sizeofline, fp)) {
 	    if (line[0] == '\n') break;
 	    if (line[0] == 'I') continue;
-	    if (!add_read(fp, line, rs, diff)) exit(1);
+	    if (!add_read(fp, line, rs, diff)) fatal("faill to read a line\n");
 	}
 	//aa.best_hyp(hy, rs, coverage);
     }
-    fprintf(outp, "%s", last_line);
+    //fprintf(outp, "%s", last_line);
     vh = vhscore(last_line);
-    aa.best_hyp(hy, rs, coverage, vh);
+    aa.best_hyp(hy, rs, coverage, vh, last_line);
     if (num_error > 0) {
 	fprintf(stderr, "Detecting %d reads with wrong flow information that can not be resolved by rescorer. Please check log file.\n", num_error);
     }
