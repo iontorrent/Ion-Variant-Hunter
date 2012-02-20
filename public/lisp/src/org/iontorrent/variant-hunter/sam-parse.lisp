@@ -15,22 +15,57 @@
   ((headers :accessor headers :initarg :headers)
    (sequences :accessor sequences :initarg :sequences)))
 
-(defun make-bam-header (sam-file)
-  (let (headers
+(defclass dna-sequence ()
+  ((seq-name :accessor seq-name :initarg :seq-name)
+   (seq-length :accessor seq-length :initarg :seq-length)))
+
+(defun parse-sam-header-lines (header-lines)
+  (let (;;(lines (parse-string header-text #\Newline))
+	headers
 	sequences)
-    (with-delimited-file (sam-line sam-file)
-      (unless (eql #\@ (char (car sam-line) 0))
-	(break-loop))
-      (when (string= (car sam-line) "@HD")
-	(push (cdr sam-line) headers))
-      (when (string= (car sam-line) "@SQ")
-	(mapc #'(lambda (column)
-		  (when (string= "SN:" (subseq column 0 3))
-		    (push (subseq column 3) sequences)))
-	      (cdr sam-line))))
+    (dolist (line header-lines)
+      (setq line (parse-string line #\Tab))
+      (cond
+	((string= (car line) "@HD")
+	 (push (cdr line) headers))
+	((string= (car line) "@SQ")
+	 (let ((new-seq (make-instance 'dna-sequence)))
+	   (mapc #'(lambda (column)
+		     (cond ((string= "SN:" (subseq column 0 3))
+			    (setf (seq-name new-seq) (subseq column 3)))
+			   ((string= "LN:" (subseq column 0 3))
+			    (setf (seq-length new-seq) (parse-integer (subseq column 3)))))
+		     )
+		 (cdr line))
+	   (push new-seq sequences)))))
     (make-instance 'bam-header
-		   :headers headers
-		   :sequences sequences)))
+		   :headers (reverse headers)
+		   :sequences (reverse sequences))))
+
+(defun make-bam-header (bam-file &optional (samtools-bin "/usr/bin/samtools"))
+  (let* ((samtools-bin-args (list "view" "-H" bam-file))
+	 (samtools-process
+	  (sb-ext:run-program samtools-bin
+			      samtools-bin-args
+			      :output :stream
+			      :error :stream))
+	 (samtools-stdout (sb-ext:process-output samtools-process))
+	 cur-line
+	 header-lines)
+    (loop for output-line = (setq cur-line (read-line-of-process samtools-process samtools-stdout))
+	 while (and ;;(setq cur-process :loop-done)
+		(not (eql :terminated output-line))
+		(not (eql :eof output-line)))
+       do
+	 (push cur-line header-lines))
+    (close samtools-stdout)
+    (unless (eql 0
+		 (process-exit-code samtools-process))
+      (format *error-output* "WARNING, error occurred with samtools call '~a ~{~a~^ ~}', so cannot get BAM header contig information." samtools-bin samtools-bin-args)
+      )
+    (values
+     (parse-sam-header-lines (reverse header-lines))
+     samtools-process)))
 
 ;; CIGAR class
 (defclass cigar ()

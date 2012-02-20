@@ -164,6 +164,14 @@
     (format stream (format nil "#~~{~~a~~^~a~~}~%" #\Tab)
 	    col-names)))
 
+;; ##contig=<ID=chr1,length=249250621,assembly=hg19>
+(defun print-vcf-header-contig (bam-file stream samtools-bin)
+  (multiple-value-bind (bam-header process)
+      (make-bam-header bam-file samtools-bin)
+    (dolist (seq (sequences bam-header))
+      (format stream "##contig=<ID=~a,length=~a>~%" (seq-name seq) (seq-length seq)))
+    process))
+
 (defvar *vcf-list-size-limit* 250)
 
 (defgeneric print-variant-candidate (var-cand stream settings-hash &optional with-deviants?))

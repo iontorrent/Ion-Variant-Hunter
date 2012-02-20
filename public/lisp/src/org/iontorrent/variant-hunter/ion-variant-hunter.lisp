@@ -52,6 +52,7 @@
 						   (fs-align-num-threads 4)
 						   python-bin
 						   python-py
+						   (samtools-bin "/usr/bin/samtools")
 						   
 						   return-align-objects?
 						   retain-dp-matrix?
@@ -119,6 +120,7 @@
 					   :fs-align-range fs-align-range
 					   :python-bin python-bin
 					   :python-py python-py
+					   :samtools-bin samtools-bin
 
 					   :validate-alignments validate-alignments
 					   )))
@@ -217,6 +219,7 @@
 
     (print-info :python-bin "Full path of python executable, can use `which python`.")
     (print-info :python-py "Full filename with path of samRegionOverlap.py (defaults to the same location as ion-variant-hunter-core)")
+    (print-info :samtools-bin "Full path of samtools executable used to get contig information for the VCF header, can use `which samtools`.")
 
     (when (eql key-value :all)
       (format stream "~%Debug options:~%"))

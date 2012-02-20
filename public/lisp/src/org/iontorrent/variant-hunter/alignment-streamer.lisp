@@ -1343,6 +1343,7 @@
 					  fs-align-range
 					  python-bin
 					  python-py
+					  samtools-bin
 
 					  validate-alignments
 					  )
@@ -1396,6 +1397,7 @@
 	  (print-generic-header align-streamer merged :merged-deviation)
 	  (print-generic-header align-streamer variant :variant)
 	  (print-vcf-header-tag-description (settings-hash align-streamer) variant)
+	  (print-vcf-header-contig (bam-file align-streamer) variant samtools-bin)
 	  (print-filter-settings (settings-hash align-streamer) merged)
 	  (print-filter-settings (settings-hash align-streamer) variant)
 	  (print-vcf-header-column-names (settings-hash align-streamer) variant)
