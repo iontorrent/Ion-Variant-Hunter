@@ -1,17 +1,17 @@
 /* Copyright (C) 2010 Ion Torrent Systems, Inc. All Rights Reserved */
-package org.iontorrent.sam2fs.flowspace; 
+package org.iontorrent.sam2flowgram.flowalign;
 
 import java.io.PrintStream;
 import java.lang.Math;
 import java.lang.Integer;
-import org.iontorrent.sam2fs.util.SamToFlowSpaceUtil;
+import org.iontorrent.sam2flowgram.util.SamToFlowgramAlignUtil;
 
 /**
  * Represents an alignment in flow space.
  *
  * @author nils.homer@lifetech.com
  */
-public class FlowSpaceAlignment 
+public class FlowgramAlignment
 {
     /**
      * The alignment was extended from a match. 
@@ -155,8 +155,8 @@ public class FlowSpaceAlignment
      * @param tseq the target base in integer format.
      * @param qseqFlowOrder the flow order of the query flow sequence.
      */
-    public FlowSpaceAlignment(FlowSeq flowQseq, byte tseq[], 
-            FlowOrder qseqFlowOrder)
+    public FlowgramAlignment(FlowSeq flowQseq, byte tseq[],
+                             FlowOrder qseqFlowOrder)
         throws Exception
     {
         this(flowQseq, tseq, qseqFlowOrder, false, false, 
@@ -164,7 +164,7 @@ public class FlowSpaceAlignment
     }
     
     /**
-     * Represents an alignment in flow space.
+     * Represents an alignment in the flowgram.
      *
      * Notes: we want to align the flow flowQseq to a subsequence of tseq
      *
@@ -175,8 +175,8 @@ public class FlowSpaceAlignment
      * @param endLocal false if the we must end the alignment at the end of the target, true otherwise 
      * @param phasePenalty the penalty for phasing in the alignment.
      */
-    public FlowSpaceAlignment(FlowSeq flowQseq, byte tseq[], FlowOrder qseqFlowOrder,
-            boolean startLocal, boolean endLocal, int phasePenalty)
+    public FlowgramAlignment(FlowSeq flowQseq, byte tseq[], FlowOrder qseqFlowOrder,
+                             boolean startLocal, boolean endLocal, int phasePenalty)
         throws Exception
     {
         this.init(flowQseq, tseq, qseqFlowOrder, startLocal, endLocal, phasePenalty);
@@ -375,7 +375,7 @@ public class FlowSpaceAlignment
                     int s = ((flowQseq.flow[i-1] < flowTseq.flow[j-1]) ? (flowTseq.flow[j-1]-flowQseq.flow[i-1]) : (flowQseq.flow[i-1]-flowTseq.flow[j-1]));
                     // NB: do not penalize it full on the first or last flow
                     if(i == 1 || i == flowQseq.length) {
-                        s = SamToFlowSpaceUtil.getFlowSignalFromBaseCall(SamToFlowSpaceUtil.getBaseCallFromFlowSignal(flowQseq.flow[i-1]));
+                        s = SamToFlowgramAlignUtil.getFlowSignalFromBaseCall(SamToFlowgramAlignUtil.getBaseCallFromFlowSignal(flowQseq.flow[i - 1]));
                         s = (flowQseq.flow[i-1] < s) ? (s - flowQseq.flow[i-1]) : (flowQseq.flow[i-1] - s);
                     }
                     if(dp[i-1][j-1].insScore <= dp[i-1][j-1].matchScore) {
@@ -493,8 +493,8 @@ public class FlowSpaceAlignment
         // Calculate tseqEnd
         this.tseqEnd = 0;
         for(j=0;j<bestJ;j++) {
-            this.tseqEnd += SamToFlowSpaceUtil.getBaseCallFromFlowSignal(flowTseq.flow[j]);
-            //System.err.println(SamToFlowSpaceUtil.DNA[tseqFlowOrder.flowOrder[j]] + " " + flowTseq.flow[j] + " " + this.tseqEnd);
+            this.tseqEnd += SamToFlowgramAlignUtil.getBaseCallFromFlowSignal(flowTseq.flow[j]);
+            //System.err.println(SamToFlowgramAlignUtil.DNA[tseqFlowOrder.flowOrder[j]] + " " + flowTseq.flow[j] + " " + this.tseqEnd);
         }
         this.tseqEnd--; 
 
@@ -584,7 +584,7 @@ public class FlowSpaceAlignment
         // Calculate tseqStart
         this.tseqStart = 0;
         for(i=0;i<j;i++) {
-            this.tseqStart += SamToFlowSpaceUtil.getBaseCallFromFlowSignal(flowTseq.flow[i]);
+            this.tseqStart += SamToFlowgramAlignUtil.getBaseCallFromFlowSignal(flowTseq.flow[i]);
         }
         
         // reverse the arrays tseq, qseq, aln, flowOrder
@@ -593,14 +593,14 @@ public class FlowSpaceAlignment
         // TODO: are these needed?
         this.nonEmptyFlowFirst = 0;
         for(i=0;i<this.length;i++) {
-            if(0 < SamToFlowSpaceUtil.getBaseCallFromFlowSignal(this.qseq[i])) {
+            if(0 < SamToFlowgramAlignUtil.getBaseCallFromFlowSignal(this.qseq[i])) {
                 this.nonEmptyFlowFirst = i;
                 break;
             }
         }
         this.nonEmptyFlowLast = 0;
         for(i=this.length-1;0<=i;i--) {
-            if(0 < SamToFlowSpaceUtil.getBaseCallFromFlowSignal(this.qseq[i])) {
+            if(0 < SamToFlowgramAlignUtil.getBaseCallFromFlowSignal(this.qseq[i])) {
                 this.nonEmptyFlowLast = i;
                 break;
             }
@@ -665,12 +665,12 @@ public class FlowSpaceAlignment
             this.tseq[i] = this.tseq[this.length-i-1];
             this.tseq[this.length-i-1] = b;
             
-            by = SamToFlowSpaceUtil.NTINT2COMP[(int)this.flowOrder[i]];
-            this.flowOrder[i] = SamToFlowSpaceUtil.NTINT2COMP[(int)this.flowOrder[this.length-i-1]];
+            by = SamToFlowgramAlignUtil.NTINT2COMP[(int)this.flowOrder[i]];
+            this.flowOrder[i] = SamToFlowgramAlignUtil.NTINT2COMP[(int)this.flowOrder[this.length-i-1]];
             this.flowOrder[this.length-i-1] = by;
         }
         if(1 == (this.length % 2)) {
-            this.flowOrder[i] = SamToFlowSpaceUtil.NTINT2COMP[(int)this.flowOrder[i]];
+            this.flowOrder[i] = SamToFlowgramAlignUtil.NTINT2COMP[(int)this.flowOrder[i]];
         }
 
         // reverse tseq bounds
@@ -776,7 +776,7 @@ public class FlowSpaceAlignment
             this.aln[this.length] = ALN_INS;
             this.tseq[this.length] = 0;
         }
-        else if(SamToFlowSpaceUtil.getBaseCallFromFlowSignal(qseqN) == SamToFlowSpaceUtil.getBaseCallFromFlowSignal(tseqN)) {
+        else if(SamToFlowgramAlignUtil.getBaseCallFromFlowSignal(qseqN) == SamToFlowgramAlignUtil.getBaseCallFromFlowSignal(tseqN)) {
             this.aln[this.length] = ALN_MATCH;
         }
         else {
@@ -943,7 +943,7 @@ public class FlowSpaceAlignment
                     flowOrder.append(" ");
                 }
             }
-            flowOrder.append(SamToFlowSpaceUtil.DNA[this.flowOrder[i % this.flowOrder.length]]);
+            flowOrder.append(SamToFlowgramAlignUtil.DNA[this.flowOrder[i % this.flowOrder.length]]);
             numChars += maxWidth;
         }
         string.append(qseq.toString() + "\n" + aln.toString() + "\n" + tseq.toString() + "\n" + flowOrder.toString()); 

@@ -2,14 +2,12 @@
 /*
  * LICENSE to be determined
  */
-package org.iontorrent.sam2fs.flowspace;
+package org.iontorrent.sam2flowgram.flowalign;
 
-import org.iontorrent.sam2fs.util.*;
-import org.iontorrent.sam2fs.io.*;
-import org.iontorrent.sam2fs.flowspace.*;
+import org.iontorrent.sam2flowgram.util.*;
+import org.iontorrent.sam2flowgram.io.*;
 
 import net.sf.samtools.*;
-import net.sf.samtools.util.*;
 import net.sf.picard.cmdline.*;
 import net.sf.picard.io.IoUtil;
 
@@ -22,18 +20,18 @@ import java.lang.Math;
  *
  * @author nils.homer@lifetech.com
  */
-public class SamToFlowSpace extends CommandLineProgram { 
+public class SamToFlowgramAlign extends CommandLineProgram {
     
-    public static final String program_version = SamToFlowSpace.class.getPackage().getImplementationVersion();
+    public static final String program_version = SamToFlowgramAlign.class.getPackage().getImplementationVersion();
     
-    public static final String PROGRAM_VERSION = "0.0.3";
+    public static final String PROGRAM_VERSION = "0.0.4";
     @Usage (programVersion=PROGRAM_VERSION)
-        public final String USAGE = getStandardUsagePreamble() + "Sam to Flow Space Utility.";
+        public final String USAGE = getStandardUsagePreamble() + "Sam to Flowgram Alignment Utility.";
     @Option(shortName=StandardOptionDefinitions.INPUT_SHORT_NAME, doc="The input SAM or BAM file.")
         public List<File> INPUT = new ArrayList<File>();
     @Option(shortName=StandardOptionDefinitions.REFERENCE_SHORT_NAME, doc="The reference FASTA file.")
         public File REFERENCE=null;
-    @Option(doc="The phase penalty when converting an alignment to flow space.", optional=true)
+    @Option(doc="The phase penalty for the flowgram alignment.", optional=true)
         public int PHASE_PENALTY=1;
     @Option(doc="Whether to suppress job-progress info on System.err.", optional=true)
         public boolean QUIET_STDERR=false;
@@ -84,9 +82,9 @@ public class SamToFlowSpace extends CommandLineProgram {
     public static void main(final String[] args) {
         
         
-        SamToFlowSpace s = new SamToFlowSpace();
+        SamToFlowgramAlign s = new SamToFlowgramAlign();
         
-        new SamToFlowSpace().instanceMain(args);
+        new SamToFlowgramAlign().instanceMain(args);
     }
 
     /**
@@ -104,7 +102,7 @@ public class SamToFlowSpace extends CommandLineProgram {
      */
     protected int doWork() 
     {
-        AlignRecord rec = null;
+        FlowAlignRecord rec = null;
 
         try { 
             this.startTime = System.nanoTime();
@@ -250,7 +248,7 @@ public class SamToFlowSpace extends CommandLineProgram {
     /**
      * @return the next record to process.
      */
-    private AlignRecord getNextAlignRecord()
+    private FlowAlignRecord getNextAlignRecord()
         throws Exception
     {
         if(this.io.hasNextAlignRecord()) {
@@ -297,8 +295,8 @@ public class SamToFlowSpace extends CommandLineProgram {
 
             int i, size;
             LinkedList<Thread> threads = null;
-            LinkedList<LinkedList<AlignRecord>> inputThreadLists = null; 
-            LinkedList<LinkedList<AlignRecord>> outputThreadLists = null; 
+            LinkedList<LinkedList<FlowAlignRecord>> inputThreadLists = null;
+            LinkedList<LinkedList<FlowAlignRecord>> outputThreadLists = null;
             SAMRecord lastRecord = null;
 
             // Get the records for the threads 
@@ -326,7 +324,7 @@ public class SamToFlowSpace extends CommandLineProgram {
             }
 
             // Output
-            List<ListIterator<AlignRecord>> iters = new LinkedList<ListIterator<AlignRecord>>();
+            List<ListIterator<FlowAlignRecord>> iters = new LinkedList<ListIterator<FlowAlignRecord>>();
             for(i=size=0;i<this.NUM_THREADS;i++) {
                 size +=  outputThreadLists.get(i).size();
                 iters.add(outputThreadLists.get(i).listIterator());
@@ -336,7 +334,7 @@ public class SamToFlowSpace extends CommandLineProgram {
                     i=0;
                 }
                 if(iters.get(i).hasNext()) {
-                    AlignRecord rec = iters.get(i).next();
+                    FlowAlignRecord rec = iters.get(i).next();
                     lastRecord = rec.record;
 
                     // output
@@ -368,20 +366,20 @@ public class SamToFlowSpace extends CommandLineProgram {
         /**
          * The records to process.
          */
-        private ListIterator<AlignRecord> arIn;
+        private ListIterator<FlowAlignRecord> arIn;
           
         /**
          * The records to output.
          */
-        private ListIterator<AlignRecord> arOut;
+        private ListIterator<FlowAlignRecord> arOut;
         
         /**
          * @param threadID the thread identifier.
          * @param arIn the records to process.
          */
         public RealignThread(int threadID,
-                ListIterator<AlignRecord> arIn,
-                ListIterator<AlignRecord> arOut)
+                ListIterator<FlowAlignRecord> arIn,
+                ListIterator<FlowAlignRecord> arOut)
         {
             this.threadID = threadID;
             this.arIn = arIn;
@@ -393,7 +391,7 @@ public class SamToFlowSpace extends CommandLineProgram {
          */
         public void run()
         {
-            AlignRecord rec = null;
+            FlowAlignRecord rec = null;
             int i;
 
             try {

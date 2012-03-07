@@ -2,7 +2,7 @@
 /*
  * LICENSE to be determined
  */
-package org.iontorrent.sam2fs.util;
+package org.iontorrent.sam2flowgram.util;
 
 /**
  *

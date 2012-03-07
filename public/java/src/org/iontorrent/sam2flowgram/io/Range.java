@@ -1,5 +1,5 @@
 /* Copyright (C) 2010 Ion Torrent Systems, Inc. All Rights Reserved */
-package org.iontorrent.sam2fs.io;
+package org.iontorrent.sam2flowgram.io;
 
 /**
  * Stores a genomic interval.

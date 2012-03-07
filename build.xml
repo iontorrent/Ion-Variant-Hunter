@@ -13,7 +13,7 @@
 	<property name="jar" value="jar"/>
 	<property name="dist" value="dist"/>
 	<property name="ant_tmp" value=".ant_tmp"/>
-	<property name="main-class" value="org.iontorrent.sam2fs.flowspace.SamToFlowSpace"/>
+	<property name="main-class" value="org.iontorrent.sam2flowgram.flowalign.SamToFlowgramAlign"/>
 	<property name="lib" value="lib"/>
 	<property name="lisp.dir" location="public/lisp"/>
 	<property name="c.dir" location="public/c"/>
@@ -88,7 +88,7 @@
 		</javac>
 		<!-- Create JAR files from the java compile -->
 		<mkdir dir="${jar}"/>
-		<jar destfile="${jar}/SamToFlowSpace.jar" basedir="${classes}" duplicate="fail" index="true">
+		<jar destfile="${jar}/SamToFlowgramAlign.jar" basedir="${classes}" duplicate="fail" index="true">
 			<zipfileset src="${lib}/sam-${sam-version}.jar" includes="**/*.class"/>
 			<zipfileset src="${lib}/picard-${picard-version}.jar" includes="**/*.class"/>
 			<manifest>

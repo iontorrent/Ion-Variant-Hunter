@@ -1,8 +1,7 @@
 /* Copyright (C) 2010 Ion Torrent Systems, Inc. All Rights Reserved */
-package org.iontorrent.sam2fs.util;
+package org.iontorrent.sam2flowgram.util;
 
 import java.util.*;
-import net.sf.samtools.*;
 
 /**
  * Used to create align record queus or iterators from a single input queue.
@@ -12,20 +11,20 @@ import net.sf.samtools.*;
 public class ThreadPoolLinkedList {
 
     // a buffer of align records
-    private LinkedList<AlignRecord> buffer; // internal use only
+    private LinkedList<FlowAlignRecord> buffer; // internal use only
 
     /**
      * Initializes an empty buffer.
      */
     public ThreadPoolLinkedList()
     {
-        this.buffer = new LinkedList<AlignRecord>();
+        this.buffer = new LinkedList<FlowAlignRecord>();
     }
 
     /**
      * @param e the record to add to the buffer.
      */
-    public void add(AlignRecord e)
+    public void add(FlowAlignRecord e)
     {
         this.buffer.add(e);
     }
@@ -41,7 +40,7 @@ public class ThreadPoolLinkedList {
     /**
      * @return the first record in the buffer, null if empty.
      */
-    public AlignRecord getFirst()
+    public FlowAlignRecord getFirst()
     {
         if(0 == this.size()) {
             return null;
@@ -52,7 +51,7 @@ public class ThreadPoolLinkedList {
     /**
      * @return the last record in the buffer, null if empty.
      */
-    public AlignRecord getLast()
+    public FlowAlignRecord getLast()
     {
         if(0 == this.size()) {
             return null;
@@ -63,7 +62,7 @@ public class ThreadPoolLinkedList {
     /**
      * @return removes and returns the first record in the buffer, null if empty.
      */
-    public AlignRecord removeFirst()
+    public FlowAlignRecord removeFirst()
     {
 
         if(0 == this.size()) {
@@ -79,19 +78,19 @@ public class ThreadPoolLinkedList {
      * @param referenceIndex the reference index of records to return, or -1 if all are to be returned.
      * @return a list of list of records, one for each thread.
      */
-    public LinkedList<LinkedList<AlignRecord>> getThreadLists(int numThreads, int referenceIndex)
+    public LinkedList<LinkedList<FlowAlignRecord>> getThreadLists(int numThreads, int referenceIndex)
     {
         int i = 0;
         int size = this.size();
-        LinkedList<LinkedList<AlignRecord>> threadLists = new LinkedList<LinkedList<AlignRecord>>();
+        LinkedList<LinkedList<FlowAlignRecord>> threadLists = new LinkedList<LinkedList<FlowAlignRecord>>();
 
         for(i=0;i<numThreads;i++) {
-            threadLists.add(new LinkedList<AlignRecord>());
+            threadLists.add(new LinkedList<FlowAlignRecord>());
         }
 
         i=0;
         while(0 != size) {
-            AlignRecord rec = this.buffer.getFirst();
+            FlowAlignRecord rec = this.buffer.getFirst();
             if(0 <= referenceIndex && rec.record.getReferenceIndex()+1 != referenceIndex) {
                 break;
             }
@@ -115,26 +114,26 @@ public class ThreadPoolLinkedList {
      * @param alignmentStartUpperBound the maximum alignment start position of any record to return.
      * @return a list of list of records, one for each thread, null if there were no entries found.
      */
-    public LinkedList<LinkedList<AlignRecord>> getThreadListsStartBound(int numThreads, int referenceIndex, int alignmentStartUpperBound)
+    public LinkedList<LinkedList<FlowAlignRecord>> getThreadListsStartBound(int numThreads, int referenceIndex, int alignmentStartUpperBound)
     {
         int i = 0;
         int size, numAdded;
-        LinkedList<LinkedList<AlignRecord>> threadLists = null;
+        LinkedList<LinkedList<FlowAlignRecord>> threadLists = null;
 
         size = this.size();
         if(size == 0) {
             return null;
         }
             
-        threadLists = new LinkedList<LinkedList<AlignRecord>>();
+        threadLists = new LinkedList<LinkedList<FlowAlignRecord>>();
 
         for(i=0;i<numThreads;i++) {
-            threadLists.add(new LinkedList<AlignRecord>());
+            threadLists.add(new LinkedList<FlowAlignRecord>());
         }
 
         i = numAdded = 0;
         while(0 != size) {
-            AlignRecord rec = this.buffer.getFirst();
+            FlowAlignRecord rec = this.buffer.getFirst();
             if(rec.record.getReferenceIndex()+1 != referenceIndex ||
                     alignmentStartUpperBound <= rec.record.getAlignmentStart()) {
                 break;
@@ -165,26 +164,26 @@ public class ThreadPoolLinkedList {
      * @param alignmentEndUpperBound the maximum alignment end position of any record to return.
      * @return a list of list of records, one for each thread, null if there were no entries found.
      */
-    public LinkedList<LinkedList<AlignRecord>> getThreadListsEndBound(int numThreads, int referenceIndex, int alignmentEndUpperBound)
+    public LinkedList<LinkedList<FlowAlignRecord>> getThreadListsEndBound(int numThreads, int referenceIndex, int alignmentEndUpperBound)
     {
         int i = 0;
         int size, numAdded;
-        LinkedList<LinkedList<AlignRecord>> threadLists = null;
+        LinkedList<LinkedList<FlowAlignRecord>> threadLists = null;
 
         size = this.size();
         if(size == 0) {
             return null;
         }
             
-        threadLists = new LinkedList<LinkedList<AlignRecord>>();
+        threadLists = new LinkedList<LinkedList<FlowAlignRecord>>();
 
         for(i=0;i<numThreads;i++) {
-            threadLists.add(new LinkedList<AlignRecord>());
+            threadLists.add(new LinkedList<FlowAlignRecord>());
         }
 
         i = numAdded = 0;
         while(0 != size) {
-            AlignRecord rec = this.buffer.getFirst();
+            FlowAlignRecord rec = this.buffer.getFirst();
             if(rec.record.getReferenceIndex()+1 != referenceIndex ||
                     alignmentEndUpperBound <= rec.record.getAlignmentEnd()) {
                 break;

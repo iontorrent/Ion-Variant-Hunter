@@ -2,23 +2,22 @@
 /*
  * LICENSE to be determined
  */
-package org.iontorrent.sam2fs.util;
+package org.iontorrent.sam2flowgram.util;
 
 import net.sf.samtools.*;
 import java.util.*;
-import org.iontorrent.sam2fs.*;
 
 /**
  * Utility functions
  *
  * @author nils.homer@lifetech.com
  */
-public class SamToFlowSpaceUtil {
+public class SamToFlowgramAlignUtil {
 	/**
 	 * Guarantees this class can't be instantiated.  
 	 * Also means the class can't be sub-classed
 	 */
-	private SamToFlowSpaceUtil() {
+	private SamToFlowgramAlignUtil() {
 		//should never happen unless someone tries to call 
 		//constructor from within this class.  
 		throw new AssertionError();
@@ -362,7 +361,7 @@ public class SamToFlowSpaceUtil {
      */
     public static int[] getFlowSignals(SAMRecord record)
     {
-        return SamToFlowSpaceUtil.getFlowSignals(record, 0, 0);
+        return SamToFlowgramAlignUtil.getFlowSignals(record, 0, 0);
     }
     
     /**

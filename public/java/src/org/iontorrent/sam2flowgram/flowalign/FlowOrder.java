@@ -1,8 +1,8 @@
 /* Copyright (C) 2010 Ion Torrent Systems, Inc. All Rights Reserved */
-package org.iontorrent.sam2fs.flowspace; 
+package org.iontorrent.sam2flowgram.flowalign;
 
 import java.io.PrintStream;
-import org.iontorrent.sam2fs.util.SamToFlowSpaceUtil;
+import org.iontorrent.sam2flowgram.util.SamToFlowgramAlignUtil;
 
 /**
  * Stores the flow order for a give read or query.
@@ -118,11 +118,11 @@ public class FlowOrder
         // flow order
         this.flowOrder = flowOrder.getBytes();
         this.length = this.flowOrder.length;
-        SamToFlowSpaceUtil.ntToInt(this.flowOrder);
+        SamToFlowgramAlignUtil.ntToInt(this.flowOrder);
         
         // key sequence
         this.keySequence = keySequence.getBytes();
-        SamToFlowSpaceUtil.ntToInt(this.keySequence);
+        SamToFlowgramAlignUtil.ntToInt(this.keySequence);
     }
 
     /**
@@ -133,7 +133,7 @@ public class FlowOrder
     {
         this.flowOrder = flowOrder.getBytes();
         this.length = this.flowOrder.length;
-        SamToFlowSpaceUtil.ntToInt(this.flowOrder);
+        SamToFlowgramAlignUtil.ntToInt(this.flowOrder);
         this.createJumpTables();
     }
 

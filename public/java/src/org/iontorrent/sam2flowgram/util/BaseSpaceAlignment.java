@@ -1,5 +1,5 @@
 /* Copyright (C) 2010 Ion Torrent Systems, Inc. All Rights Reserved */
-package org.iontorrent.sam2fs.util;
+package org.iontorrent.sam2flowgram.util;
 
 import java.util.*;
 import java.io.PrintStream;

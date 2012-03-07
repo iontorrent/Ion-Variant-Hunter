@@ -1,11 +1,10 @@
 /* Copyright (C) 2010 Ion Torrent Systems, Inc. All Rights Reserved */
-package org.iontorrent.sam2fs.util;
+package org.iontorrent.sam2flowgram.util;
 
-import org.iontorrent.sam2fs.flowspace.*;
+import org.iontorrent.sam2flowgram.flowalign.*;
 import java.io.PrintStream;
 import java.util.*;
 import net.sf.samtools.*;
-import org.iontorrent.sam2fs.*;
 
 /**
  * Stores information about the read sequence after initial
@@ -134,7 +133,7 @@ public class ReadSeq {
 		// read bytes
 		this.readBytes = new byte[record.getReadLength() - startL - endL]; // allocate
 		System.arraycopy(record.getReadBases(), startL, this.readBytes, 0, record.getReadLength() - startL - endL); // copy
-		SamToFlowSpaceUtil.ntToInt(this.readBytes); // to integer
+		SamToFlowgramAlignUtil.ntToInt(this.readBytes); // to integer
 	}
 
     /**
@@ -181,7 +180,7 @@ public class ReadSeq {
         if(0 < hardClipBasesLength) {
             i = hardClipBasesLength;
             while(0 < i) {
-                k = SamToFlowSpaceUtil.getBaseCallFromFlowSignal(flowSignals[l]); // TODO: this assumes that the base calls correspond to the implied base calls from the flow signals
+                k = SamToFlowgramAlignUtil.getBaseCallFromFlowSignal(flowSignals[l]); // TODO: this assumes that the base calls correspond to the implied base calls from the flow signals
                 if(0 <= i - k) {
                     j = (j + 1) % flowOrder.length;
                     l++;
@@ -203,7 +202,7 @@ public class ReadSeq {
             this.startSequenceOverlapAmount = 0; // default: no overlap
         }
         else if(readBase == flowOrder[j]) {
-            this.startSequenceOverlapAmount = SamToFlowSpaceUtil.getFlowSignalFromBaseCall(lastBaseCall);
+            this.startSequenceOverlapAmount = SamToFlowgramAlignUtil.getFlowSignalFromBaseCall(lastBaseCall);
         }
         else {
             this.startSequenceOverlapAmount = 0; // default: no overlap
@@ -244,11 +243,11 @@ public class ReadSeq {
                 }
                 // We need to reverse the soft end clipped bases
                 if(null != this.softClipEndBases) {
-                    softClipBases = SamToFlowSpaceUtil.basesToInt(this.softClipEndBases);
-                    SamToFlowSpaceUtil.reverseCompliment(softClipBases);
+                    softClipBases = SamToFlowgramAlignUtil.basesToInt(this.softClipEndBases);
+                    SamToFlowgramAlignUtil.reverseCompliment(softClipBases);
                 }
 
-                readBase = SamToFlowSpaceUtil.NTINT2COMP[this.readBytes[this.readBytes.length-1]];
+                readBase = SamToFlowgramAlignUtil.NTINT2COMP[this.readBytes[this.readBytes.length-1]];
             }
             else {
                 // We need the hard clipped bases
@@ -257,7 +256,7 @@ public class ReadSeq {
                 }
                 // We need the soft clipped bases
                 if(null != this.softClipStartBases) {
-                    softClipBases = SamToFlowSpaceUtil.basesToInt(this.softClipStartBases);
+                    softClipBases = SamToFlowgramAlignUtil.basesToInt(this.softClipStartBases);
                 }
                 readBase = this.readBytes[0];
             }

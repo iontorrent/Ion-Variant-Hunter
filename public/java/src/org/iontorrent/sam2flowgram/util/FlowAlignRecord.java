@@ -1,29 +1,17 @@
 /* Copyright (C) 2010 Ion Torrent Systems, Inc. All Rights Reserved */
 //here be dragons
-package org.iontorrent.sam2fs.util;
+package org.iontorrent.sam2flowgram.util;
 
-import java.io.IOException;
-import java.lang.reflect.Array;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import org.iontorrent.sam2fs.flowspace.*;
+import org.iontorrent.sam2flowgram.flowalign.*;
 
-import java.util.*;
 import net.sf.samtools.*;
-import net.sf.samtools.util.BinaryCodec;
-import net.sf.samtools.util.DateParser;
-import net.sf.samtools.util.RuntimeIOException;
-import net.sf.samtools.util.StringUtil;
 
 /**
  * Stores information for query alignment and re-alignment.
  *
  * @author nils.homer@lifetech.com
  */
-public class AlignRecord implements Cloneable {
+public class FlowAlignRecord implements Cloneable {
 
     /**
      * The SAM record associated with this query.
@@ -73,7 +61,7 @@ public class AlignRecord implements Cloneable {
      * The flow space representation of the alignment relative to the forward
      * genomic strand.
      */
-    public FlowSpaceAlignment alignment;
+    public FlowgramAlignment alignment;
     /**
      * True if we are to perform a base space start local alignment.
      */
@@ -83,7 +71,7 @@ public class AlignRecord implements Cloneable {
      * @param record the original SAM record.
      * @param fileIndex the zero-based file index from which the query was read.
      */
-    public AlignRecord(SAMRecord record, int fileIndex, FlowOrder flowOrder) {
+    public FlowAlignRecord(SAMRecord record, int fileIndex, FlowOrder flowOrder) {
         this.record = record;
         this.fileIndex = fileIndex;
         this.readSeq = new ReadSeq(record);
@@ -97,7 +85,7 @@ public class AlignRecord implements Cloneable {
     }
 
     
-    public AlignRecord(AlignRecord toCopy) {
+    public FlowAlignRecord(FlowAlignRecord toCopy) {
      
     }
     
@@ -108,7 +96,7 @@ public class AlignRecord implements Cloneable {
      */
     @Override
     public Object clone() throws CloneNotSupportedException {
-        final AlignRecord newRecord = (AlignRecord)super.clone();
+        final FlowAlignRecord newRecord = (FlowAlignRecord)super.clone();
         newRecord.fileIndex = this.fileIndex;
         newRecord.referenceIndex = this.referenceIndex;
         newRecord.flowOrder = this.flowOrder;
@@ -136,7 +124,7 @@ public class AlignRecord implements Cloneable {
         int j;
         if(start) {
             j = 0;
-            while(FlowSpaceAlignment.ALN_INS == this.alignment.aln[j] || SamToFlowSpaceUtil.getBaseCallFromFlowSignal(this.alignment.tseq[j]) <= 0) {
+            while(FlowgramAlignment.ALN_INS == this.alignment.aln[j] || SamToFlowgramAlignUtil.getBaseCallFromFlowSignal(this.alignment.tseq[j]) <= 0) {
                 j++;
                 if(j == this.alignment.length) {
                     break;
@@ -145,7 +133,7 @@ public class AlignRecord implements Cloneable {
         }
         else {
             j = this.alignment.length - 1;
-            while(FlowSpaceAlignment.ALN_INS == this.alignment.aln[j] || SamToFlowSpaceUtil.getBaseCallFromFlowSignal(this.alignment.tseq[j]) <= 0) {
+            while(FlowgramAlignment.ALN_INS == this.alignment.aln[j] || SamToFlowgramAlignUtil.getBaseCallFromFlowSignal(this.alignment.tseq[j]) <= 0) {
                 j--;
                 if(j == 0) {
                     break;
@@ -219,7 +207,7 @@ public class AlignRecord implements Cloneable {
         }
     }
     
-    public FlowSpaceAlignment setAlignment(ReferenceSequence sequence, int phasePenalty)
+    public FlowgramAlignment setAlignment(ReferenceSequence sequence, int phasePenalty)
         throws Exception
     {
         return this.setAlignment(sequence, phasePenalty, false);
@@ -232,7 +220,7 @@ public class AlignRecord implements Cloneable {
      * @param validateAlignments validate alignments.
      * @return the flow alignment.
      */
-    public FlowSpaceAlignment setAlignment(ReferenceSequence sequence, int phasePenalty, boolean validateAlignments)
+    public FlowgramAlignment setAlignment(ReferenceSequence sequence, int phasePenalty, boolean validateAlignments)
         throws Exception
     {
         return this.setAlignment(sequence, phasePenalty, 0, validateAlignments);
@@ -245,7 +233,7 @@ public class AlignRecord implements Cloneable {
      * @param offset the alignment offset in bases
      * @return the flow alignment.
      */
-    public FlowSpaceAlignment setAlignment(ReferenceSequence sequence, int phasePenalty, int offset, boolean validateAlignments)
+    public FlowgramAlignment setAlignment(ReferenceSequence sequence, int phasePenalty, int offset, boolean validateAlignments)
         throws Exception 
     {
         int i, j, k, n;
@@ -301,8 +289,8 @@ public class AlignRecord implements Cloneable {
         // Note: readBases and referenceBases are on the forward strand
         // Reverse compliment
         if(this.strand) {
-            SamToFlowSpaceUtil.reverseCompliment(readBases);
-            SamToFlowSpaceUtil.reverseCompliment(referenceBases);
+            SamToFlowgramAlignUtil.reverseCompliment(readBases);
+            SamToFlowgramAlignUtil.reverseCompliment(referenceBases);
             // swap
             tmpBoolean = startLocalAlignment;
             startLocalAlignment = endLocalAlignment;
@@ -313,17 +301,17 @@ public class AlignRecord implements Cloneable {
         System.err.println("this.positionStart=" + this.positionStart);
         System.err.println("this.positionEnd=" + this.positionEnd);
         for(i=0;i<readBases.length;i++) {
-        System.err.print(SamToFlowSpaceUtil.DNA[(int)readBases[i]]);
+        System.err.print(SamToFlowgramAlignUtil.DNA[(int)readBases[i]]);
         }
         System.err.println("");
         for(i=0;i<referenceBases.length;i++) {
-        System.err.print(SamToFlowSpaceUtil.DNA[(int)referenceBases[i]]);
+        System.err.print(SamToFlowgramAlignUtil.DNA[(int)referenceBases[i]]);
         }
         System.err.println("");
         */
 
         // retrieve the flow signals
-        flowSignals = SamToFlowSpaceUtil.getFlowSignals(this.record);
+        flowSignals = SamToFlowgramAlignUtil.getFlowSignals(this.record);
         if(null == flowSignals) {
             throw new Exception("The FZ optional tag (flow signals) was not present");
         }
@@ -343,7 +331,7 @@ public class AlignRecord implements Cloneable {
         this.readFlows = new FlowSeq(readBases, flowSignals, this.flowOrder.flowOrder);
 
         // represent the alignment in flow space
-        this.alignment = new FlowSpaceAlignment(this.readFlows, referenceBases, this.flowOrder,
+        this.alignment = new FlowgramAlignment(this.readFlows, referenceBases, this.flowOrder,
             startLocalAlignment,
             endLocalAlignment,
             phasePenalty);
@@ -369,7 +357,7 @@ public class AlignRecord implements Cloneable {
         }
 
         // adjust if we start with an insertion
-        if(FlowSpaceAlignment.ALN_INS == this.alignment.aln[0]) {
+        if(FlowgramAlignment.ALN_INS == this.alignment.aln[0]) {
             this.positionStart--;
         }
         
@@ -401,15 +389,15 @@ public class AlignRecord implements Cloneable {
         int positionStart;
 
         for(i=length=0;i<this.alignment.length;i++) {
-            if(FlowSpaceAlignment.ALN_INS != this.alignment.aln[i]) {
+            if(FlowgramAlignment.ALN_INS != this.alignment.aln[i]) {
                 length += this.alignment.tseq[i];
             }
         }
         // convert from flow signals
-        length = SamToFlowSpaceUtil.getBaseCallFromFlowSignal(length);
+        length = SamToFlowgramAlignUtil.getBaseCallFromFlowSignal(length);
 
         positionStart = this.positionStart;
-        if(FlowSpaceAlignment.ALN_INS == this.alignment.aln[0]) {
+        if(FlowgramAlignment.ALN_INS == this.alignment.aln[0]) {
             positionStart++;
         }
 
@@ -435,7 +423,7 @@ public class AlignRecord implements Cloneable {
         int positionStart;
 
         positionStart = this.positionStart;
-        if(FlowSpaceAlignment.ALN_INS == this.alignment.aln[0]) {
+        if(FlowgramAlignment.ALN_INS == this.alignment.aln[0]) {
             positionStart++;
         }
         
@@ -443,10 +431,10 @@ public class AlignRecord implements Cloneable {
 
         fsReferenceBases = new byte[this.positionEnd - this.positionStart + 1];
         for(i=j=0;i<this.alignment.length;i++) {
-            if(FlowSpaceAlignment.ALN_INS != this.alignment.aln[i]) {
-                length = SamToFlowSpaceUtil.getBaseCallFromFlowSignal(this.alignment.tseq[i]);
+            if(FlowgramAlignment.ALN_INS != this.alignment.aln[i]) {
+                length = SamToFlowgramAlignUtil.getBaseCallFromFlowSignal(this.alignment.tseq[i]);
                 while(0 < length) {
-                    fsReferenceBases[j] = (byte)SamToFlowSpaceUtil.DNA[this.alignment.flowOrder[i]];
+                    fsReferenceBases[j] = (byte) SamToFlowgramAlignUtil.DNA[this.alignment.flowOrder[i]];
                     if(referenceBases.length <= j || fsReferenceBases[j] != referenceBases[j]) {
                         differ = true;
                     }
@@ -474,7 +462,7 @@ public class AlignRecord implements Cloneable {
         byte curBase;
         
         positionStart = this.positionStart;
-        if(FlowSpaceAlignment.ALN_INS == this.alignment.aln[0]) {
+        if(FlowgramAlignment.ALN_INS == this.alignment.aln[0]) {
             positionStart++;
         }
         
@@ -514,7 +502,7 @@ public class AlignRecord implements Cloneable {
 
         fsFlowSignals = new int[this.alignment.length];
         for(i=j=0;i<this.alignment.length;i++) {
-            if(FlowSpaceAlignment.ALN_DEL != this.alignment.aln[i]) {
+            if(FlowgramAlignment.ALN_DEL != this.alignment.aln[i]) {
                 if(flowSignals[j] != this.alignment.qseq[i]) {
                     differ = true;
                 }
@@ -569,20 +557,20 @@ public class AlignRecord implements Cloneable {
             by=1;
         }
         for(i=start;i!=end;i+=by) {
-            if(FlowSpaceAlignment.ALN_INS == this.alignment.aln[i]) {
+            if(FlowgramAlignment.ALN_INS == this.alignment.aln[i]) {
                 score -= this.alignment.qseq[i];
                 if(prevBase == this.alignment.flowOrder[i]) {
                     n++;
                     score -= phasePenalty; 
                 }
             }
-            else if(FlowSpaceAlignment.ALN_DEL == this.alignment.aln[i]) {
+            else if(FlowgramAlignment.ALN_DEL == this.alignment.aln[i]) {
                 score -= this.alignment.tseq[i];
                 prevBase = this.alignment.flowOrder[i];
             }
-            else if(FlowSpaceAlignment.ALN_MATCH == this.alignment.aln[i] || FlowSpaceAlignment.ALN_MISMATCH == this.alignment.aln[i]) {
+            else if(FlowgramAlignment.ALN_MATCH == this.alignment.aln[i] || FlowgramAlignment.ALN_MISMATCH == this.alignment.aln[i]) {
                 if(0 == i || this.alignment.length - 1 == i) {
-                    int s = SamToFlowSpaceUtil.getFlowSignalFromBaseCall(SamToFlowSpaceUtil.getBaseCallFromFlowSignal(this.alignment.qseq[i]));
+                    int s = SamToFlowgramAlignUtil.getFlowSignalFromBaseCall(SamToFlowgramAlignUtil.getBaseCallFromFlowSignal(this.alignment.qseq[i]));
                     if(s < this.alignment.qseq[i]) {
                         score -= (this.alignment.qseq[i] - s);
                     }
@@ -717,7 +705,7 @@ public class AlignRecord implements Cloneable {
             sb.append( this.record.getIntegerAttribute(attr) );
         }
        
-        int[] flowSignals = SamToFlowSpaceUtil.getFlowSignals(this.record);
+        int[] flowSignals = SamToFlowgramAlignUtil.getFlowSignals(this.record);
         sb.append( FIELD_SEPARATOR );
         sb.append("FZ");
         sb.append(byteArrayAttr);

@@ -1,7 +1,6 @@
 /* Copyright (C) 2010 Ion Torrent Systems, Inc. All Rights Reserved */
-package org.iontorrent.sam2fs.util;
+package org.iontorrent.sam2flowgram.util;
 
-import java.io.*;
 import java.util.*;
 import net.sf.samtools.*;
 
@@ -10,7 +9,7 @@ import net.sf.samtools.*;
  *
  * @author nils.homer@lifetech.com
  */
-public class AlignRecordComparator implements Comparator<AlignRecord> 
+public class FlowAlignRecordComparator implements Comparator<FlowAlignRecord>
 {
     /**
      * The SAM record comparator.
@@ -20,7 +19,7 @@ public class AlignRecordComparator implements Comparator<AlignRecord>
     /**
      * Creates a new genomic co-ordinate comparator.
      */
-    public AlignRecordComparator()
+    public FlowAlignRecordComparator()
     {
         comp = new SAMRecordCoordinateComparator();
     }
@@ -31,7 +30,7 @@ public class AlignRecordComparator implements Comparator<AlignRecord>
      * @param o2 the second record.
      * @return a negative value if the co-ordinate of o1 is less than o2, zero if equal, a positive value otherwise.
      */
-    public int compare(AlignRecord o1, AlignRecord o2)
+    public int compare(FlowAlignRecord o1, FlowAlignRecord o2)
     {
         return this.comp.compare(o1.record, o2.record);
     }
@@ -41,7 +40,7 @@ public class AlignRecordComparator implements Comparator<AlignRecord>
      * @param o2 the second record.
      * @return true if both have the same co-ordinate, false otherwise.
      */
-    public boolean equals(AlignRecord o1, AlignRecord o2)
+    public boolean equals(FlowAlignRecord o1, FlowAlignRecord o2)
     {
         return (0 == this.comp.compare(o1.record, o2.record)) ? true : false;
     }

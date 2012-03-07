@@ -1,10 +1,9 @@
 /* Copyright (C) 2010 Ion Torrent Systems, Inc. All Rights Reserved */
-package org.iontorrent.sam2fs.util;
+package org.iontorrent.sam2flowgram.util;
 
 import java.io.*;
 import java.util.*;
-import net.sf.samtools.*;
-import net.sf.samtools.*;
+
 import net.sf.picard.reference.*;
 
 /**
@@ -173,10 +172,10 @@ public class ReferenceSequence {
         }
 
         if(iupac) {
-            base = SamToFlowSpaceUtil.IUPAC2NT[base];
+            base = SamToFlowgramAlignUtil.IUPAC2NT[base];
         }
         if(asInt) {
-            base = SamToFlowSpaceUtil.NT2INT[(int)base];
+            base = SamToFlowgramAlignUtil.NT2INT[(int)base];
         }
 
         return base;
@@ -225,10 +224,10 @@ public class ReferenceSequence {
         }
 
         if(iupac) {
-            SamToFlowSpaceUtil.iupacToNT(bases);
+            SamToFlowgramAlignUtil.iupacToNT(bases);
         }
         if(asInt) {
-            SamToFlowSpaceUtil.ntToInt(bases);
+            SamToFlowgramAlignUtil.ntToInt(bases);
         }
         return bases;
     }

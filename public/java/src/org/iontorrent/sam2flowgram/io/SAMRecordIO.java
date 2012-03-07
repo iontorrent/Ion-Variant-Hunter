@@ -1,8 +1,8 @@
 /* Copyright (C) 2010 Ion Torrent Systems, Inc. All Rights Reserved */
-package org.iontorrent.sam2fs.io;
+package org.iontorrent.sam2flowgram.io;
 
-import org.iontorrent.sam2fs.util.*;
-import org.iontorrent.sam2fs.flowspace.FlowOrder;
+import org.iontorrent.sam2flowgram.util.*;
+import org.iontorrent.sam2flowgram.flowalign.FlowOrder;
 
 import java.util.*;
 import java.io.*;
@@ -58,7 +58,7 @@ public class SAMRecordIO
     /**
      * A record buffer for each input SAM/BAM file.
      */
-    private List<AlignRecord> buffer = null; 
+    private List<FlowAlignRecord> buffer = null;
 
     /**
      * True if header comments were added to the output file, false otherwise.
@@ -70,7 +70,7 @@ public class SAMRecordIO
      * @param inputs the input SAM/BAM file(s).
      * @param outputs the output SAM/BAM file(s).
      * @param outputsUnmapped the output SAM/BAM file(s) for unmapped reads.
-     * @param programVeresion the SamToFlowSpace program version.
+     * @param programVeresion the SamToFlowgramAlign program version.
      * @param useRanges true if the SAM/BAM file is to be range queried, false otherwise.
      * @param referenceDictionary the reference sequence dictionary.
      */
@@ -265,7 +265,7 @@ public class SAMRecordIO
         ListIterator<CloseableIterator<SAMRecord>> iter = null;
         int fileIndex = 0;
 
-        this.buffer = new LinkedList<AlignRecord>();
+        this.buffer = new LinkedList<FlowAlignRecord>();
 
         iter = this.recordsIters.listIterator();
         while(iter.hasNext()) {
@@ -292,7 +292,7 @@ public class SAMRecordIO
         SAMReadGroupRecord readGroup = null;
         FlowOrder flowOrder = null;
         for(i=0;i<this.buffer.size();i++) {
-            AlignRecord bufferRec = this.buffer.get(i);
+            FlowAlignRecord bufferRec = this.buffer.get(i);
             if(rec.getReferenceIndex() < bufferRec.record.getReferenceIndex() ||
                     (rec.getReferenceIndex() == bufferRec.record.getReferenceIndex() &&
                      rec.getAlignmentStart() <= bufferRec.record.getAlignmentStart())) 
@@ -314,7 +314,7 @@ public class SAMRecordIO
             throw new Exception("Could not find the flow order for the read with read group ID: " + readGroup.getId());
         }
 
-        this.buffer.add(i, new AlignRecord(rec, fileIndex, new FlowOrder(flowOrder)));
+        this.buffer.add(i, new FlowAlignRecord(rec, fileIndex, new FlowOrder(flowOrder)));
     }
 
     /**
@@ -333,10 +333,10 @@ public class SAMRecordIO
     /**
      * @return the next record in the buffer.
      */
-    public AlignRecord getNextAlignRecord()
+    public FlowAlignRecord getNextAlignRecord()
         throws Exception
     {
-        AlignRecord ar = null;
+        FlowAlignRecord ar = null;
 
         if(this.hasNextAlignRecord()) {
             ar = this.buffer.remove(0);
@@ -389,7 +389,7 @@ public class SAMRecordIO
      * Adds the record for outputting.
      * @param rec the record to add to the output.
      */
-    public void output(AlignRecord rec)
+    public void output(FlowAlignRecord rec)
     {
         if(1 == this.writers.size()) {
             if(this.headerCommentsAdded) {
@@ -407,7 +407,7 @@ public class SAMRecordIO
      * Adds the unmapped record for outputting to the .
      * @param rec the record to add to the output.
      */
-    public void outputUnmapped(AlignRecord rec)
+    public void outputUnmapped(FlowAlignRecord rec)
     {
         if(0 == this.writersUnmapped.size()) {
             // suppress

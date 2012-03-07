@@ -1,8 +1,8 @@
 /* Copyright (C) 2010 Ion Torrent Systems, Inc. All Rights Reserved */
-package org.iontorrent.sam2fs.flowspace; 
+package org.iontorrent.sam2flowgram.flowalign;
 
 import java.io.PrintStream;
-import org.iontorrent.sam2fs.util.SamToFlowSpaceUtil;
+import org.iontorrent.sam2flowgram.util.SamToFlowgramAlignUtil;
 
 /**
  * Represents an base sequence in flow space.
@@ -152,11 +152,11 @@ public class FlowSeq {
         if(null != signals) {
             for(i=startFlowIndex, k=0;i<signals.length;i++,k++) {
                 // the read sequence has the priority
-                if(SamToFlowSpaceUtil.getBaseCallFromFlowSignal(this.flow[k]) == SamToFlowSpaceUtil.getBaseCallFromFlowSignal(signals[k])) {
+                if(SamToFlowgramAlignUtil.getBaseCallFromFlowSignal(this.flow[k]) == SamToFlowgramAlignUtil.getBaseCallFromFlowSignal(signals[k])) {
                     this.flow[k] = signals[k];
                 }
                 else {
-                    this.flow[k] += (signals[k] - (SamToFlowSpaceUtil.getBaseCallFromFlowSignal(signals[k]) * 100));
+                    this.flow[k] += (signals[k] - (SamToFlowgramAlignUtil.getBaseCallFromFlowSignal(signals[k]) * 100));
                     if(this.flow[k] < 0) {
                         this.flow[k] = 0;
                     }
