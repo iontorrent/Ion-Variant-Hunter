@@ -9,7 +9,7 @@
 (defvar *src-files*)
 (setq *src-files* (list  "util.lisp" "stats.lisp" "parse-util.lisp" "reference.lisp" "sam-parse.lisp" "flow-space.lisp" "seq-deviations.lisp" "vcf-writer.lisp" "alignment-streamer.lisp" "ion-variant-hunter.lisp"))
 
-(defvar *vh-version* "0.1.3.alpha")
+(defvar *vh-version* "0.1.3.beta")
 (dolist (src-file *src-files*)
   (load src-file))
 

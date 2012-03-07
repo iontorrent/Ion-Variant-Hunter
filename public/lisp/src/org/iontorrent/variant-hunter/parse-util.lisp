@@ -167,6 +167,19 @@
       pathspec 
       (string-concat (get-current-directory) pathspec)))
 
+(defun get-default-paths (&optional (platform :unix))
+  (case platform
+    (:unix
+     (parse-string (sb-unix::posix-getenv "PATH") #\:))))
+
+(defun find-binary-in-path (binary)
+  (unless (find #\/ binary)
+    (dolist (path (get-default-paths))
+      (let ((binary-w-path (format nil "~a/~a" path binary)))
+	(when (directory binary-w-path)
+	  (return-from find-binary-in-path binary-w-path))))
+    nil))
+
 (defvar *starting-current-directory*
   (unless (boundp '*build-date*)
     (get-current-directory)))

@@ -44,15 +44,15 @@
 						   (max-intensity-per-base
 						    "A:600,T:600,G:600,C:600")
 
-						   java-bin
+						   (java-bin "java")
 						   java-bin-args
 						   fs-align-jar
 						   fs-align-jar-args
 						   fs-align-range
 						   (fs-align-num-threads 4)
-						   python-bin
+						   (python-bin "python")
 						   python-py
-						   (samtools-bin "/usr/bin/samtools")
+						   (samtools-bin "samtools")
 						   
 						   return-align-objects?
 						   retain-dp-matrix?
@@ -64,6 +64,10 @@
 						   validate-alignments)
   (unless base-output-filename
     (error "ERROR: Please specify --base-output-filename~%"))
+
+  (setq java-bin (or (find-binary-in-path java-bin) java-bin))
+  (setq python-bin (or (find-binary-in-path python-bin) python-bin))
+  (setq samtools-bin (or (find-binary-in-path samtools-bin) samtools-bin))
 
   (let (;; Setting output files
 	align-file
@@ -210,16 +214,16 @@
 
     (when (eql key-value :all)
       (format stream "~%External program options:~%"))
-    (print-info :java-bin "Full path of java executable, can use `which java`")
+    (print-info :java-bin "Full path of java executable, or just the binary name, i.e. java, without the path, if it can be found in the PATH.")
     (print-info :java-bin-args "Arguments for java placed before the -jar argument.")
     (print-info :fs-align-jar "Full filename with path of SamToFlowSpace.jar (defaults to the same location as ion-variant-hunter-core)")
     (print-info :fs-align-jar-args "Arguments for the flow space aligner jar package.")
     (print-info :fs-align-range "RANGE option to specify genomic region, i.e. chr4:1000-2000.")
     (print-info :fs-align-num-threads "Number of threads to give the java flow space aligner.")
 
-    (print-info :python-bin "Full path of python executable, can use `which python`.")
+    (print-info :python-bin "Full path of python executable, or just the binary name, i.e. 'python26', without the path, if it can be found in the PATH.")
     (print-info :python-py "Full filename with path of samRegionOverlap.py (defaults to the same location as ion-variant-hunter-core)")
-    (print-info :samtools-bin "Full path of samtools executable used to get contig information for the VCF header, can use `which samtools`.")
+    (print-info :samtools-bin "Full path of samtools executable used to get contig information for the VCF header, or just the binary name, i.e. 'samtools' without path, if it can be found in the PATH. .")
 
     (when (eql key-value :all)
       (format stream "~%Debug options:~%"))

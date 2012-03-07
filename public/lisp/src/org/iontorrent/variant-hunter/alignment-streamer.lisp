@@ -382,7 +382,7 @@
   ;; jar location (defaults to same location as this binary's)
   (set-value-or-default settings-hash :fs-align-jar
 			fs-align-jar
-			(full-path-at-exec-directory "SamToFlowSpace.jar"))
+			(full-path-at-exec-directory "SamToFlowgramAlign.jar"))
 
   ;; set the number of threads
   (set-value-or-default settings-hash :fs-align-num-threads
