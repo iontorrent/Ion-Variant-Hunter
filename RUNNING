@@ -20,6 +20,10 @@ Common options:
 --min-num-reads ,3
 --fs-align-range chr3:43543983-95343234
 
+Default threading parameters work fine under Ubuntu 10.04, however sbcl threading needs to be
+disabled for CentOS 5.6 for stability reasons.  To do this, just add this option:
+--vh-num-threads ,1
+
 Comma is needed in front of non-string values such as numbers, keywords (they start with a colon),
 T, and NIL, for example:
 --aligner-method ,:auto
