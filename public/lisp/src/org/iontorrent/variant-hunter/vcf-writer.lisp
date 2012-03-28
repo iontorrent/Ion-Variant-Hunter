@@ -284,7 +284,7 @@
 	    (when (get-tag-values #'mapq)
 	      (determine-map-qv-rms-n-0-counts (get-tag-values #'mapq) 1))
 	  (format stream "MQ=~,4f;" rms)
-	  (format stream "MQ0=~a;" mapq0-counts))
+	  (format stream "MQ0=~a" mapq0-counts))
 	)
       )
     )
