@@ -180,6 +180,24 @@
 	  (return-from find-binary-in-path binary-w-path))))
     nil))
 
+(defun bam-n-bai-present? (bam-file)
+  (and (directory bam-file)
+       (directory (format nil "~a.bai" bam-file))))
+
+(defun check-bam-n-bai (bam-file)
+  (unless (stringp bam-file)
+    (error (format nil "ERROR: Specify BAM file directly without any comma (,).")))
+  (unless (bam-n-bai-present? bam-file)
+    (error (format nil "ERROR: BAM and BAM index (.bai) files are both required.  BAM given: '~a'~%"
+		   bam-file)))
+  t)
+
+(defun check-bam-n-bai-non-fatal (bam-file)
+  (unless (bam-n-bai-present? bam-file)
+    (format *error-output* "CRITICAL WARNING: BAM and/or BAM index (.bai) files are missing.  BAM given: '~a'~%"
+	    bam-file))
+  t)
+
 (defvar *starting-current-directory*
   (unless (boundp '*build-date*)
     (get-current-directory)))
@@ -192,6 +210,14 @@
 		   ;; dev version
 		  *starting-current-directory*)))
     (string-concat path filename)))
+
+(defun find-binary-in-path-or-exec-directory (filename)
+  (or 
+   (unless (eql 0 (length (get-exec-directory)))
+     (full-path-at-exec-directory filename))
+   (find-binary-in-path filename)
+   (full-path-at-exec-directory filename)
+   ))
 
 ;; General util functions
 (defun get-random-item (list)

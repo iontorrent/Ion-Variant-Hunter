@@ -382,7 +382,7 @@
   ;; jar location (defaults to same location as this binary's)
   (set-value-or-default settings-hash :fs-align-jar
 			fs-align-jar
-			(full-path-at-exec-directory "SamToFlowgramAlign.jar"))
+			(find-binary-in-path-or-exec-directory "SamToFlowgramAlign.jar"))
 
   ;; set the number of threads
   (set-value-or-default settings-hash :fs-align-num-threads
@@ -426,7 +426,7 @@
   ;; python py script location (defaults to same location as this binary's)
   (set-value-or-default settings-hash :python-py
 			python-py
-			(full-path-at-exec-directory "samRegionOverlap.py")))
+			(find-binary-in-path-or-exec-directory "samRegionOverlap.py")))
 
 (defun decide-align-method (aligner-method sam-file bam-file)
   (case aligner-method
@@ -827,7 +827,7 @@
 			:error :stream
 			)))
 
-(defun check-process-run-status-n-print-stderr (process)
+(defun check-process-run-status-n-print-stderr (process bam-file)
   (let ((process-stderr (process-error process))
 	(process-exit (process-exit-code process))
 	std-error-lines) ;;standard error output lines
@@ -851,13 +851,15 @@
       (format *error-output* "End of external process error output.~%"))
     (close process-stderr)
     (unless (eql 0 process-exit)
+      ;; see if BAM and .bai files are still there.
+      (check-bam-n-bai-non-fatal bam-file)
       (error "ERROR, external process with pid ~a exited abnormally with an exit code of ~a.~%"
 	     (process-pid process)
 	     (process-exit-code process))))
     )
 
 (defmethod stream-ext-java ((streamer alignment-streamer) method-on-align)
-  (with-slots (settings-hash cur-bam cur-align cur-process)
+  (with-slots (settings-hash cur-bam cur-align cur-process bam-file)
       streamer
     (let* ((process
 	    (run-java-program settings-hash))
@@ -905,7 +907,7 @@
 	   
       (print-process-info process)
       (progress-message record-counter cur-bam start-time t)
-      (check-process-run-status-n-print-stderr process)
+      (check-process-run-status-n-print-stderr process bam-file)
       (when (process-alive-p process)
 	(format *error-output* "Note, java process still alive even after task completion. Terminating process ~a.~%" process)
 	(sb-ext:process-kill process 15))
@@ -917,6 +919,7 @@
 
 (defun run-python-program (settings-hash bam-file)
   settings-hash
+  (check-bam-n-bai-non-fatal bam-file)
   (let ((python-bin (gethash :python-bin settings-hash)) ;;"/usr/bin/python")
 	(python-py (gethash :python-py settings-hash)) ;;'("/data/antioch/projects/ion_variant_calling/mixed-NA12878-NA19099/samRegionOverlap/tests/samRegionOverlap.py"
 	(python-args (list bam-file)) ;; code just takes bam as a single argument
@@ -1033,7 +1036,7 @@
 	  (reverse spanning-plus-strand-read-counts))
     (unless (eql (length spanning-read-counts)
 		 (length variant-candidates))
-      (format *error-output* "CRITICAL WARNING.  Number of records extracted from python script does not match the number of variants.  Total read counts are not to be trusted.")
+      (format *error-output* "CRITICAL WARNING.  Number of records extracted from python script does not match the number of variants.  Total read counts are not to be trusted.~%")
       )
     ;; now annotate tags
     (when variant-candidates
@@ -1046,7 +1049,7 @@
 
     ;; check the status of the external python process and print out stderr
     ;; (print-process-info process)
-    (check-process-run-status-n-print-stderr process)
+    (check-process-run-status-n-print-stderr process bam-file)
 
     ;;won't be any return value
     )))

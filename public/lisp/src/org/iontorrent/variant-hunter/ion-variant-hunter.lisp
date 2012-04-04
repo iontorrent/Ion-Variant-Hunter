@@ -65,9 +65,13 @@
   (unless base-output-filename
     (error "ERROR: Please specify --base-output-filename~%"))
 
+  ;; Search for items found in the PATH
+  (setq fs-align-jar (or (find-binary-in-path fs-align-jar) fs-align-jar))
   (setq java-bin (or (find-binary-in-path java-bin) java-bin))
   (setq python-bin (or (find-binary-in-path python-bin) python-bin))
   (setq samtools-bin (or (find-binary-in-path samtools-bin) samtools-bin))
+  ;; Check for BAM and .bai files
+  (when bam-file (check-bam-n-bai bam-file))
 
   (let (;; Setting output files
 	align-file
