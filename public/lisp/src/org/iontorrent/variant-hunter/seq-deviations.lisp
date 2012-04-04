@@ -840,7 +840,7 @@ Q/QCGA --(trim left) --> -/CGA
     (sort deviations #'seq-deviation<)))
 
 (defvar *common-issues*)
-(setq *common-issues* '(cannot-merge))
+(setq *common-issues* '(:cannot-merge))
 
 (defgeneric remove-deviations-with-issues (deviations))
 (defmethod remove-deviations-with-issues ((deviations cons))
