@@ -1299,8 +1299,16 @@
 	  (unless (overall-filtered? var-cand)
 	    (setq cur-process :printing-variant)
 	    ;; (push var-cand *chr1-73.642M-var-candidates*) ;; DEBUG!
-	    (print-variant-candidate var-cand variant-strm settings-hash)
-	    (print-variant-candidate var-cand deviant-strm settings-hash t))
+
+	    (let* ((variants (mapcar #'cdr (scores-n-q-t-seqs var-cand)))
+		   (top-pair (car variants))
+		   (top-var (car top-pair)))
+	      (when (eql 0 (length top-var))
+		(format *error-output* "WARNING, the following VCF record will not be in the ouput because of a missing primary variant sequence.~%")
+		(print-variant-candidate var-cand *error-output* settings-hash))
+	      (unless (eql 0 (length top-var))
+		(print-variant-candidate var-cand variant-strm settings-hash)
+		(print-variant-candidate var-cand deviant-strm settings-hash t))))
 
 	  ;; Memory clean up
 	  ;;(unless (eql *debug-mode* :debug) ;; DEBUG
