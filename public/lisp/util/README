@@ -1,7 +1,0 @@
-
-Utility scripts for Ion Variant Hunter.
-----------------------------------------
-filter_indels.py -- Filter by Bayesian score and removes all SNPs from the results
-
-removeBadVCF-From-dev.pl -- Removes a single record from a .dev file, mainly for debugging purposes
-

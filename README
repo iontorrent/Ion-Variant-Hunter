@@ -1,46 +1,6 @@
 
 Ion Variant Hunter README
-Feb. 2012
-v. 0.1.2
+March 2013
 
-**** BRIEF DESCRIPTION ****
-Ion Variant Hunter is a unified variant caller, that uses flow intensities and alignments based
-on bases and base counts (aka flowgram).
-
-Variant Hunter produces both SNPs and InDels, but note that the Torrent Server variant
-caller plugin only uses the InDel calls from this software.
-
-**** SBCL INSTALLATION ****
-For building the lisp component (ion-variant-hunter-core):
-Requires sbcl to be installed.  Specific sbcl version used for TS 2.0.x was sbcl-1.0.51.
-
-As a convenience only, internal Ion Torrent users can grab that sbcl binary compiled so that it will work
-under both Ubuntu and CentOS 5.6 in the internal svn repo here:
-svn/SWTEAM/trunk/eftsung/external/sbcl-binary-w-mods/sbcl-1.0.51.2x-backend-parms.binary.tgz
-and follow the directions found in the README file.
-
-What I did to produce this is to take the modifications to sbcl found in this package and compiled it
-following instructions found in sbcl's README.  I did the compiling under CentOS 5.6 and the resulting binary
-worked in Ubuntu. Note, compling under Ubuntu produces a binary that doesn't work under CentOS.
-
-Modifications to sbcl used while building can be found in this package at
-public/lisp/sbcl-mod/
-
-For development, one can use slime with emacs. Both are available packages in Ubuntu 10.04.
-
-**** JAVA Component ****
-For the java component (SamToFlowSpace.jar):
-Download sam-1.57.jar and picard-1.57.jar and place them in a folder
-called lib (http://sourceforge.net/projects/picard/files/picard-tools/1.57/picard-tools-1.57.zip/download).
-
-
-**** Building, cleaning, and running ****
-To build:
-ant
-
-To clean:
-ant clean
-
-To run:
-See RUNNING
+Ion Variant Hunter is legacy code that was used in Torrent Server version 1.5.1 and 2.0 and is no longer supported.
 
